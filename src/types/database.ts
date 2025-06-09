@@ -11,6 +11,13 @@ export interface Client {
   updated_at: string;
 }
 
+export interface Profile {
+  id: string;
+  invoice_points: number;
+  updated_at: string;
+  created_at: string;
+}
+
 export interface Invoice {
   id: string;
   invoice_number: string;

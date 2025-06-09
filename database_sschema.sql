@@ -12,6 +12,31 @@ CREATE TABLE public.clients (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT clients_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.company_settings (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  company_name text NOT NULL,
+  address_line1 text NOT NULL,
+  address_line2 text,
+  city text NOT NULL,
+  state text NOT NULL,
+  postal_code text NOT NULL,
+  country text NOT NULL,
+  phone text,
+  email text NOT NULL,
+  website text,
+  tax_id text,
+  bank_account text,
+  notes text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  organization_number text,
+  is_company_registered boolean DEFAULT false,
+  vat_registered boolean DEFAULT false,
+  vat_number text,
+  CONSTRAINT company_settings_pkey PRIMARY KEY (id),
+  CONSTRAINT company_settings_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 CREATE TABLE public.invoice_items (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   invoice_id uuid NOT NULL,
@@ -21,6 +46,8 @@ CREATE TABLE public.invoice_items (
   amount numeric NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  vat_rate numeric DEFAULT 25.00,
+  vat_amount numeric DEFAULT 0.00,
   CONSTRAINT invoice_items_pkey PRIMARY KEY (id),
   CONSTRAINT invoice_items_invoice_id_fkey FOREIGN KEY (invoice_id) REFERENCES public.invoices(id)
 );
@@ -36,6 +63,11 @@ CREATE TABLE public.invoices (
   notes text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  delivery_time timestamp with time zone,
+  delivery_place text,
+  vat_rate numeric DEFAULT 25.00,
+  vat_amount numeric DEFAULT 0.00,
+  subtotal_amount numeric DEFAULT 0.00,
   CONSTRAINT invoices_pkey PRIMARY KEY (id),
   CONSTRAINT invoices_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id)
 );
@@ -51,4 +83,12 @@ CREATE TABLE public.payments (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT payments_pkey PRIMARY KEY (id),
   CONSTRAINT payments_invoice_id_fkey FOREIGN KEY (invoice_id) REFERENCES public.invoices(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  invoice_points integer NOT NULL DEFAULT 0,
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );

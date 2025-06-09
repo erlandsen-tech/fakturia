@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import type { InvoiceWithDetails, InvoiceStatus } from '@/types/database';
-import { ArrowLeft, Save, Printer, Trash } from 'lucide-react';
+import { ArrowLeft, Save, Printer, Trash, Send } from 'lucide-react';
 import Link from 'next/link';
 import { t } from '@/lib/i18n';
 import { PDFDownloadLink } from '@react-pdf/renderer';
@@ -22,6 +22,7 @@ interface InvoiceDetailClientProps {
 export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
     issue_date: invoice.issue_date,
@@ -51,26 +52,97 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
     setSaving(true);
 
     try {
+      console.log('Attempting to save invoice with data:', formData);
+      
+      // Prepare data for submission, converting empty strings to null for timestamp fields
+      const submitData = {
+        ...formData,
+        delivery_time: formData.delivery_time.trim() === '' ? null : formData.delivery_time,
+        notes: formData.notes.trim() === '' ? null : formData.notes,
+        delivery_place: formData.delivery_place.trim() === '' ? null : formData.delivery_place,
+      };
+      
+      console.log('Processed data for submission:', submitData);
+      
       const response = await fetch(`/api/invoices/${invoice.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to update invoice');
+        const errorText = await response.text();
+        console.error('Error response text:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (parseError) {
+          console.error('Failed to parse error response as JSON:', parseError);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to update invoice`);
       }
+
+      const result = await response.json();
+      console.log('Success response:', result);
 
       toast.success(t('Invoice updated successfully'));
       router.refresh();
     } catch (error) {
       console.error('Error updating invoice:', error);
-      toast.error(t('Failed to update invoice'));
+      
+      // More specific error messages
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast.error(t('Network error. Please check your connection and try again.'));
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error(t('Failed to update invoice'));
+      }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSend = async () => {
+    if (formData.status !== 'draft') {
+      toast.error(t('Only draft invoices can be sent'));
+      return;
+    }
+
+    setSending(true);
+
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'send' }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send invoice');
+      }
+
+      // Update local state
+      setFormData(prev => ({ ...prev, status: 'sent' }));
+      
+      toast.success(t('Invoice sent successfully'));
+      router.refresh();
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      toast.error(t('Failed to send invoice'));
+    } finally {
+      setSending(false);
     }
   };
 
@@ -106,6 +178,9 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   const totalVatAmount = invoice.items.reduce((sum, item) => sum + (item.vat_amount || 0), 0);
   const totalAmount = subtotalAmount + totalVatAmount;
 
+  // Check if invoice can be sent
+  const canSendInvoice = formData.status === 'draft';
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
@@ -121,10 +196,6 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="h-4 w-4 mr-2" />
-              {t('Print')}
-            </Button>
             {companySettings && (
               <PDFDownloadLink
                 document={
@@ -177,10 +248,23 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                 )}
               </PDFDownloadLink>
             )}
+            
+            {canSendInvoice && (
+              <Button 
+                onClick={handleSend} 
+                disabled={sending}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {sending ? t('Sending...') : t('Send Invoice')}
+              </Button>
+            )}
+            
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
               {saving ? t('Saving...') : t('Save Changes')}
             </Button>
+            
             <Button
               variant="destructive"
               onClick={handleDelete}
