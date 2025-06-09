@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Save, Send } from 'lucide-react';
+import { Plus, Trash2, Save, Send, Coins, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Client, InvoiceStatus } from '@/types/database';
+import type { Client, InvoiceStatus, Profile } from '@/types/database';
 import { t } from '@/lib/i18n';
 
 interface InvoiceItem {
@@ -24,6 +24,8 @@ interface InvoiceItem {
 export default function CreateInvoicePage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
 
@@ -50,6 +52,29 @@ export default function CreateInvoicePage() {
     };
     getUser();
   }, []);
+
+  // Load user profile for invoice points
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+
+      setProfileLoading(true);
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (!profileError && profileData) {
+        setProfile(profileData);
+      } else if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile:', profileError);
+      }
+      setProfileLoading(false);
+    };
+
+    loadProfile();
+  }, [user, supabase]);
 
   // Load clients on component mount
   useEffect(() => {
@@ -133,13 +158,22 @@ export default function CreateInvoicePage() {
   const totalVatAmount = items.reduce((sum, item) => sum + (item.vat_amount || 0), 0);
   const totalAmount = subtotalAmount + totalVatAmount;
 
-  // Generate invoice number
-  const generateInvoiceNumber = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `INV-${year}${month}-${random}`;
+  // Check if user has enough points
+  const hasEnoughPoints = () => {
+    return profile && profile.invoice_points > 0;
+  };
+
+  // Handle buying invoice points
+  const handleBuyInvoicePoints = () => {
+    fetch('/api/create-checkout-session', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          toast.error('Failed to start checkout');
+        }
+      });
   };
 
   // Save invoice
@@ -156,6 +190,12 @@ export default function CreateInvoicePage() {
 
     if (items.some(item => !item.description.trim())) {
       toast.error(t('Please fill in all item descriptions'));
+      return;
+    }
+
+    // Check if user has enough points
+    if (!hasEnoughPoints()) {
+      toast.error(t('You need at least 1 invoice point to create an invoice'));
       return;
     }
 
@@ -203,6 +243,22 @@ export default function CreateInvoicePage() {
 
       if (itemsError) throw itemsError;
 
+      // Deduct 1 invoice point
+      const newPoints = (profile?.invoice_points || 0) - 1;
+      const { error: updatePointsError } = await supabase
+        .from('profiles')
+        .update({ invoice_points: newPoints })
+        .eq('id', user.id);
+
+      if (updatePointsError) {
+        console.error('Error updating invoice points:', updatePointsError);
+        // Don't fail the invoice creation if points update fails
+        toast.error('Invoice created but failed to update points. Please contact support.');
+      } else {
+        // Update local state
+        setProfile(prev => prev ? { ...prev, invoice_points: newPoints } : null);
+      }
+
       toast.success(t(status === 'draft' ? 'Invoice saved as draft successfully!' : 'Invoice created and sent successfully!'));
       router.push('/invoices');
     } catch (error) {
@@ -218,6 +274,56 @@ export default function CreateInvoicePage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold">{t('Create New Invoice')}</h1>
         <p className="text-muted-foreground">{t('Fill in the details below to create a new invoice')}</p>
+      </div>
+
+      {/* Invoice Points Status */}
+      <div className="mb-6">
+        {profileLoading ? (
+          <div className="p-4 bg-gray-50 rounded-lg border">
+            <div className="flex items-center gap-2">
+              <Coins className="h-5 w-5 text-gray-500" />
+              <span className="text-gray-600">{t('Loading...')}</span>
+            </div>
+          </div>
+        ) : !hasEnoughPoints() ? (
+          <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <div>
+                  <h3 className="font-semibold text-red-900">
+                    {t('Insufficient Invoice Points')}
+                  </h3>
+                  <p className="text-sm text-red-700">
+                    {t('You need at least 1 invoice point to create an invoice.')} 
+                    {' '}
+                    {t('Available Points')}: {profile?.invoice_points || 0}
+                  </p>
+                </div>
+              </div>
+              <Button 
+                onClick={handleBuyInvoicePoints}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {t('Buy Invoice Points')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center gap-3">
+              <Coins className="h-5 w-5 text-green-600" />
+              <div>
+                <h3 className="font-semibold text-green-900">{t('Invoice Points')}</h3>
+                <p className="text-sm text-green-700">
+                  {t('Available Points')}: {profile?.invoice_points || 0}
+                  {' '}
+                  (1 {t('point will be deducted when creating this invoice')})
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-8">
@@ -482,14 +588,14 @@ export default function CreateInvoicePage() {
           <Button
             onClick={() => saveInvoice('draft')}
             variant="outline"
-            disabled={loading}
+            disabled={loading || !hasEnoughPoints()}
           >
             <Save className="h-4 w-4 mr-2" />
             {t('Save as Draft')}
           </Button>
           <Button
             onClick={() => saveInvoice('sent')}
-            disabled={loading}
+            disabled={loading || !hasEnoughPoints()}
           >
             <Send className="h-4 w-4 mr-2" />
             {t('Create & Send')}
