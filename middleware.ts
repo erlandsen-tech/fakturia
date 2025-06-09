@@ -1,28 +1,51 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 // Define protected routes
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/invoices(.*)",
-  "/clients(.*)",
-  "/settings(.*)"
-]);
+const isProtectedRoute = (pathname: string) => {
+  return pathname.startsWith('/dashboard') ||
+         pathname.startsWith('/invoices') ||
+         pathname.startsWith('/clients') ||
+         pathname.startsWith('/settings');
+};
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    const { userId } = await auth();
-    
-    // If the user is not signed in, redirect them to the sign-in page
-    if (!userId) {
-      const signInUrl = new URL('/sign-in', req.url);
-      signInUrl.searchParams.set('redirect_url', req.url);
-      return NextResponse.redirect(signInUrl);
+// Define protected API routes
+const isProtectedApiRoute = (pathname: string) => {
+  return pathname.startsWith('/api/invoices') ||
+         pathname.startsWith('/api/clients') ||
+         pathname.startsWith('/api/payments');
+};
+
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Protect page routes
+  if (isProtectedRoute(req.nextUrl.pathname)) {
+    if (!session) {
+      const redirectUrl = new URL('/sign-in', req.url);
+      redirectUrl.searchParams.set('redirect_url', req.url);
+      return NextResponse.redirect(redirectUrl);
     }
   }
-  
-  return NextResponse.next();
-});
+
+  // Protect API routes
+  if (isProtectedApiRoute(req.nextUrl.pathname)) {
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+  }
+
+  return res;
+}
 
 export const config = {
   matcher: [
