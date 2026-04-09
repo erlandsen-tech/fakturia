@@ -24,6 +24,7 @@ primary_region = "ams"
 
 [checks]
   [checks.alive]
+    type = "http"
     grace_period = "10s"
     interval = "30s"
     method = "get"
