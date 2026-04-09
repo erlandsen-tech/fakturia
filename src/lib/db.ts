@@ -1,14 +1,21 @@
 import { Pool } from 'pg';
 
-// Create a connection pool to your Supabase PostgreSQL database
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: true
+let _pool: Pool | null = null;
+
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: true
+      }
+    });
   }
-});
+  return _pool;
+}
 
 export const query = async (text: string, params?: any[]) => {
+  const pool = getPool();
   const client = await pool.connect();
   try {
     const result = await client.query(text, params);
@@ -19,7 +26,7 @@ export const query = async (text: string, params?: any[]) => {
 };
 
 export const getClient = async () => {
-  return await pool.connect();
+  return getPool().connect();
 };
 
-export default pool; 
+export default { query, getClient };

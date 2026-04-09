@@ -3,11 +3,12 @@ import { fetchUserRecord, updateUserRecord, deleteUserRecord } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js';
 import type { InvoiceWithDetails } from '@/types/database';
 
-// Create Supabase client with service role key to bypass RLS for profile updates
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 /**
  * GET /api/invoices/[id] - Fetch specific invoice with ownership verification
@@ -197,7 +198,7 @@ export async function PATCH(
     }
 
     // Check if user has enough invoice points
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const { data: profile, error: profileError } = await getSupabaseAdmin()
       .from('profiles')
       .select('invoice_points')
       .eq('id', invoice.user_id)
@@ -226,7 +227,7 @@ export async function PATCH(
       });
 
       // Deduct 1 invoice point from user's profile
-      const { error: updateError } = await supabaseAdmin
+      const { error: updateError } = await getSupabaseAdmin()
         .from('profiles')
         .update({ 
           invoice_points: profile.invoice_points - 1,

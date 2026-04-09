@@ -3,9 +3,12 @@ import Stripe from 'stripe';
 import { createClient } from '@/utils/supabase/server';
 import { t } from '@/lib/i18n';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+}
 
 export async function POST(request: Request) {
+  const stripe = getStripe();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
