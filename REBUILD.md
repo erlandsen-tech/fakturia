@@ -28,20 +28,28 @@ Next.js 15 (App Router)
 
 ## Pricing Models
 
-### Subscription (Monthly)
-- **Basic**: 149 NOK/mo — 10 invoices
-- **Pro**: 299 NOK/mo — 50 invoices + email delivery
-- **Unlimited**: 499 NOK/mo — unlimited invoices + AI API access
+### Bundle Packs (No subscription)
+- **5-pack**: 49 NOK (9.80 NOK/invoice)
+- **10-pack**: 89 NOK (8.90 NOK/invoice)
+- **25-pack**: 199 NOK (7.96 NOK/invoice)
 
-### One-off (No subscription)
-- **Single invoice**: 49 NOK per invoice (Stripe Checkout, no account needed for payment)
-- Buy "invoice packs": 5-pack 199 NOK, 10-pack 349 NOK
+### Subscription (Monthly)
+- **Starter**: 199 NOK/mo — up to 50 invoices (3.98 NOK/invoice)
+- **Growth**: 399 NOK/mo — unlimited invoices + AI API access
+- **Enterprise**: 4,500 NOK/yr — unlimited invoices, 2 users, priority support
+
+### Why this works
+- Bundle packs are more expensive per invoice than Starter — pushes users to subscribe
+- Micro-biz that sends 1-5 invoices/month can buy a pack, no commitment
+- Subscription is clearly the better deal at volume (3.98 vs 7.96+ per invoice)
+- Enterprise annual plan locks in revenue and reduces churn
 
 ### Implementation
-- Stripe Products + Prices for each tier
+- Stripe Products + Prices for each bundle pack and subscription tier
 - `subscription_tier` column in profiles table
-- One-off purchases use Stripe Payment Links or one-time Checkout Sessions
-- Points system remains for one-off; subscription removes point counting
+- Bundle purchases use Stripe one-time Checkout Sessions
+- Points system: bundles add points, subscriptions remove point counting
+- First 3 invoices free for all new users (trial)
 
 ## Database Schema Changes
 
