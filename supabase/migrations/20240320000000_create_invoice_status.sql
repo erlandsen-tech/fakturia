@@ -25,6 +25,8 @@ BEGIN
 END $$;
 
 -- Update the invoices table to use the new type
-ALTER TABLE public.invoices 
-  ALTER COLUMN status TYPE public.invoice_status 
-  USING status::public.invoice_status; 
+ALTER TABLE public.invoices ALTER COLUMN status DROP DEFAULT;
+ALTER TABLE public.invoices
+  ALTER COLUMN status TYPE public.invoice_status
+  USING status::public.invoice_status;
+ALTER TABLE public.invoices ALTER COLUMN status SET DEFAULT 'draft'::public.invoice_status;

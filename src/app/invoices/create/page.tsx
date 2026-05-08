@@ -163,100 +163,76 @@ export default function CreateInvoicePage() {
     return profile && profile.invoice_points > 0;
   };
 
-  // Handle buying invoice points
+  // Handle buying invoice points → route to pricing page
   const handleBuyInvoicePoints = () => {
-    fetch('/api/create-checkout-session', { method: 'POST' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          toast.error('Failed to start checkout');
-        }
-      });
+    router.push('/pricing');
   };
 
-  // Save invoice
+  // Save invoice via /api/invoices. Drafts are free; sending costs 1 point
+  // (deducted server-side via PATCH action=send).
   const saveInvoice = async (status: InvoiceStatus = 'draft') => {
     if (!user) {
       toast.error(t('You must be logged in to create an invoice'));
       return;
     }
-
     if (!formData.client_id) {
       toast.error(t('Please select a client'));
       return;
     }
-
     if (items.some(item => !item.description.trim())) {
       toast.error(t('Please fill in all item descriptions'));
       return;
     }
-
-    // Check if user has enough points
-    if (!hasEnoughPoints()) {
-      toast.error(t('You need at least 1 invoice point to create an invoice'));
+    if (status === 'sent' && !hasEnoughPoints()) {
+      toast.error(t('You need at least 1 invoice point to send an invoice'));
       return;
     }
 
     setLoading(true);
-
     try {
-      // Create invoice
-      const invoiceData = {
-        client_id: formData.client_id,
-        user_id: user.id,
-        issue_date: formData.issue_date,
-        due_date: formData.due_date,
-        status,
-        subtotal_amount: subtotalAmount,
-        vat_amount: totalVatAmount,
-        total_amount: totalAmount,
-        vat_rate: formData.vat_rate,
-        delivery_time: formData.delivery_time || null,
-        delivery_place: formData.delivery_place || null,
-        notes: formData.notes || null,
-      };
+      // Step 1: create as draft
+      const createRes = await fetch('/api/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: formData.client_id,
+          issue_date: formData.issue_date,
+          due_date: formData.due_date,
+          notes: formData.notes || null,
+          delivery_time: formData.delivery_time || null,
+          delivery_place: formData.delivery_place || null,
+          vat_rate: formData.vat_rate,
+          items: items.map((i) => ({
+            description: i.description,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            vat_rate: i.vat_rate,
+          })),
+        }),
+      });
+      const createBody = await createRes.json();
+      if (!createRes.ok) {
+        toast.error(createBody.error || t('Failed to create invoice'));
+        return;
+      }
+      const invoiceId = createBody.data.id;
 
-      const { data: invoice, error: invoiceError } = await supabase
-        .from('invoices')
-        .insert(invoiceData)
-        .select()
-        .single();
-
-      if (invoiceError) throw invoiceError;
-
-      // Create invoice items
-      const itemsData = items.map(item => ({
-        invoice_id: invoice.id,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        amount: item.amount,
-        vat_rate: item.vat_rate,
-        vat_amount: item.vat_amount,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('invoice_items')
-        .insert(itemsData);
-
-      if (itemsError) throw itemsError;
-
-      // Deduct 1 invoice point
-      const newPoints = (profile?.invoice_points || 0) - 1;
-      const { error: updatePointsError } = await supabase
-        .from('profiles')
-        .update({ invoice_points: newPoints })
-        .eq('id', user.id);
-
-      if (updatePointsError) {
-        console.error('Error updating invoice points:', updatePointsError);
-        // Don't fail the invoice creation if points update fails
-        toast.error('Invoice created but failed to update points. Please contact support.');
-      } else {
-        // Update local state
-        setProfile(prev => prev ? { ...prev, invoice_points: newPoints } : null);
+      // Step 2: if user clicked "Send", PATCH to send (deducts a point atomically)
+      if (status === 'sent') {
+        const sendRes = await fetch(`/api/invoices/${invoiceId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'send' }),
+        });
+        const sendBody = await sendRes.json();
+        if (!sendRes.ok) {
+          toast.error(sendBody.error || t('Invoice created but failed to send'));
+          // Still navigate — invoice exists as draft
+        } else {
+          if (typeof sendBody.data?.remaining_points === 'number') {
+            setProfile((prev) => prev ? { ...prev, invoice_points: sendBody.data.remaining_points } : prev);
+          }
+        }
       }
 
       toast.success(t(status === 'draft' ? 'Invoice saved as draft successfully!' : 'Invoice created and sent successfully!'));
@@ -588,7 +564,7 @@ export default function CreateInvoicePage() {
           <Button
             onClick={() => saveInvoice('draft')}
             variant="outline"
-            disabled={loading || !hasEnoughPoints()}
+            disabled={loading}
           >
             <Save className="h-4 w-4 mr-2" />
             {t('Save as Draft')}

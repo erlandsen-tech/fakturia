@@ -3,9 +3,16 @@
 -- 2. Change timestamp types to timestamp with time zone
 -- 3. Add NOT NULL constraints and defaults
 
--- First, rename the column
-ALTER TABLE public.profiles 
-RENAME COLUMN update_at TO updated_at;
+-- First, rename the column (only if the typo'd version exists)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema='public' AND table_name='profiles' AND column_name='update_at'
+  ) THEN
+    ALTER TABLE public.profiles RENAME COLUMN update_at TO updated_at;
+  END IF;
+END $$;
 
 -- Change the data types to timestamp with time zone
 ALTER TABLE public.profiles 

@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Copy } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 import type { InvoiceWithDetails } from '@/types/database';
 import { Badge } from '@/components/ui/badge';
 import { t } from '@/lib/i18n';
+import { useRouter } from 'next/navigation';
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
@@ -21,7 +22,28 @@ const statusColors = {
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cloningId, setCloningId] = useState<string | null>(null);
   const supabase = createClient();
+  const router = useRouter();
+
+  const handleClone = async (id: string) => {
+    setCloningId(id);
+    try {
+      const res = await fetch(`/api/invoices/${id}/clone`, { method: 'POST' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `HTTP ${res.status}`);
+      }
+      const { data } = await res.json();
+      toast.success(t('Faktura kopiert'));
+      router.push(`/invoices/${data.id}`);
+    } catch (e) {
+      console.error('Clone failed:', e);
+      toast.error(t('Kunne ikke kopiere faktura'));
+    } finally {
+      setCloningId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -93,6 +115,7 @@ export default function InvoicesPage() {
                   <th className="text-left p-4">{t('Due Date')}</th>
                   <th className="text-left p-4">{t('Amount')}</th>
                   <th className="text-left p-4">{t('Status')}</th>
+                  <th className="text-right p-4 w-16"></th>
                 </tr>
               </thead>
               <tbody>
@@ -111,6 +134,17 @@ export default function InvoicesPage() {
                       <Badge className={statusColors[invoice.status]}>
                         {t(invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1))}
                       </Badge>
+                    </td>
+                    <td className="p-4 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title={t('Kopier som ny kladd')}
+                        onClick={() => handleClone(invoice.id)}
+                        disabled={cloningId === invoice.id}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}

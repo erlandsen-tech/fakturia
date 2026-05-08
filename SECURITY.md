@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the comprehensive security measures implemented in the Astral application to ensure users can only access data they are authorized to see.
+This document outlines the security measures implemented in Fakturio to ensure users can only access data they are authorized to see.
 
 ## 🛡️ Security Layers Implemented
 

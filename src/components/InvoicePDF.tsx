@@ -110,6 +110,32 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: '#222',
   },
+  paymentBlock: {
+    marginTop: 16,
+    padding: 12,
+    border: '1px solid #d1d5db',
+    backgroundColor: '#f9fafb',
+  },
+  paymentTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 6,
+    color: '#0f172a',
+  },
+  paymentRow: {
+    flexDirection: 'row',
+    fontSize: 11,
+    marginBottom: 2,
+  },
+  paymentLabel: {
+    width: 90,
+    color: '#475569',
+  },
+  paymentValue: {
+    flexGrow: 1,
+    fontWeight: 'bold',
+    color: '#0f172a',
+  },
   footer: {
     position: 'absolute',
     bottom: 24,
@@ -142,6 +168,7 @@ interface InvoicePDFProps {
     website?: string;
     logoUrl?: string;
     slogan?: string;
+    bankAccount?: string;
   };
   client: {
     name: string;
@@ -153,6 +180,7 @@ interface InvoicePDFProps {
   invoice: {
     number: string;
     date: string;
+    dueDate?: string;
     orderNumber?: string;
     items: Array<{
       number: string;
@@ -250,6 +278,31 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ company, client, invoice
           <Text style={[styles.totalsValue, { fontWeight: 'bold' }]}>{invoice.total.toFixed(2)}</Text>
         </View>
       </View>
+
+      {/* Payment information — pay via nettbank */}
+      {company.bankAccount && (
+        <View style={styles.paymentBlock}>
+          <Text style={styles.paymentTitle}>Betalingsinformasjon</Text>
+          <View style={styles.paymentRow}>
+            <Text style={styles.paymentLabel}>Kontonummer:</Text>
+            <Text style={styles.paymentValue}>{company.bankAccount}</Text>
+          </View>
+          <View style={styles.paymentRow}>
+            <Text style={styles.paymentLabel}>Merknad/KID:</Text>
+            <Text style={styles.paymentValue}>{invoice.number}</Text>
+          </View>
+          {invoice.dueDate && (
+            <View style={styles.paymentRow}>
+              <Text style={styles.paymentLabel}>Forfall:</Text>
+              <Text style={styles.paymentValue}>{formatDateNo(invoice.dueDate)}</Text>
+            </View>
+          )}
+          <View style={styles.paymentRow}>
+            <Text style={styles.paymentLabel}>Beløp:</Text>
+            <Text style={styles.paymentValue}>{invoice.total.toFixed(2)} {invoice.currency}</Text>
+          </View>
+        </View>
+      )}
 
       {/* Payment terms */}
       <Text style={styles.paymentTerms}><Text style={{ fontWeight: 'bold' }}>Betalingsbetingelser:</Text> {invoice.paymentTerms}</Text>

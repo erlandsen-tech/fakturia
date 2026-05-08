@@ -1,47 +1,52 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Define protected routes
-const isProtectedRoute = (pathname: string) => {
-  return pathname.startsWith('/dashboard') ||
-         pathname.startsWith('/invoices') ||
-         pathname.startsWith('/clients') ||
-         pathname.startsWith('/settings');
-};
+const isProtectedPage = (pathname: string) =>
+  pathname.startsWith('/dashboard') ||
+  pathname.startsWith('/invoices') ||
+  pathname.startsWith('/clients') ||
+  pathname.startsWith('/settings');
 
-// Define protected API routes
-const isProtectedApiRoute = (pathname: string) => {
-  return pathname.startsWith('/api/invoices') ||
-         pathname.startsWith('/api/clients') ||
-         pathname.startsWith('/api/payments');
-};
+const isProtectedApi = (pathname: string) =>
+  pathname.startsWith('/api/invoices') ||
+  pathname.startsWith('/api/clients') ||
+  pathname.startsWith('/api/payments') ||
+  pathname.startsWith('/api/create-checkout-session');
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  let res = NextResponse.next({ request: { headers: req.headers } });
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  // Protect page routes
-  if (isProtectedRoute(req.nextUrl.pathname)) {
-    if (!session) {
-      const redirectUrl = new URL('/sign-in', req.url);
-      redirectUrl.searchParams.set('redirect_url', req.url);
-      return NextResponse.redirect(redirectUrl);
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          res = NextResponse.next({ request: req });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            res.cookies.set(name, value, options)
+          );
+        },
+      },
     }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const { pathname } = req.nextUrl;
+
+  if (isProtectedPage(pathname) && !user) {
+    const redirectUrl = new URL('/sign-in', req.url);
+    redirectUrl.searchParams.set('redirect_url', req.url);
+    return NextResponse.redirect(redirectUrl);
   }
 
-  // Protect API routes
-  if (isProtectedApiRoute(req.nextUrl.pathname)) {
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  if (isProtectedApi(pathname) && !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   return res;
@@ -49,9 +54,8 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files
+    // Skip Next.js internals and static files
     '/((?!_next|[^?]*\\.(html?|css|js|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|pdf)).*)',
-    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
-}; 
+};
