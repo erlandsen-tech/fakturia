@@ -1,316 +1,253 @@
-import React from 'react';
 import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-  Image,
-  Font
-} from '@react-pdf/renderer';
+  Document, Page, Text, View, StyleSheet, Font,
+} from "@react-pdf/renderer";
 
-// Placeholder logo URL
-const LOGO_URL = 'https://via.placeholder.com/180x60?text=LOGO';
+Font.register({
+  family: "Instrument Serif",
+  src: "https://fonts.gstatic.com/s/instrumentserif/v17/jizDREVItHgc8qDIbSTKq4XIRPesnu5Q5g.ttf",
+  fontStyle: "normal",
+});
+Font.register({
+  family: "Instrument Serif",
+  src: "https://fonts.gstatic.com/s/instrumentserif/v17/jizGREVItHgc8qDIbSTKq4XIRPesnu5Q3oH8sw.ttf",
+  fontStyle: "italic",
+});
+Font.register({
+  family: "Inter Tight",
+  fonts: [
+    { src: "https://fonts.gstatic.com/s/intertight/v7/NGSnv5HMAFg6IuGlBNMjxJEL2VmU3NS7Z2JCaQ.ttf", fontWeight: 400 },
+    { src: "https://fonts.gstatic.com/s/intertight/v7/NGSnv5HMAFg6IuGlBNMjxJEL2VmU3NS7Z2JCaQ.ttf", fontWeight: 500 },
+  ],
+});
+Font.register({
+  family: "JetBrains Mono",
+  src: "https://fonts.gstatic.com/s/jetbrainsmono/v18/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxjOVS-pNyldA.ttf",
+});
 
-// Styles
+const C = {
+  paper:    "#FAF6ED",
+  paper2:   "#EADFC9",
+  paperBg:  "#D6CDB7",
+  ink:      "#1A1815",
+  ink2:     "#3B362E",
+  ink3:     "#6B645A",
+  inkMute:  "#9A9286",
+  clay:     "#DC4F2C",
+};
+
 const styles = StyleSheet.create({
   page: {
-    fontFamily: 'Helvetica',
+    backgroundColor: C.paperBg,
+    padding: 40,
+    fontFamily: "Inter Tight",
+    color: C.ink,
     fontSize: 11,
-    padding: 32,
-    backgroundColor: '#fff',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+  paper: {
+    backgroundColor: C.paper,
+    padding: 50,
+    minHeight: "100%",
   },
-  logo: {
-    width: 180,
-    height: 60,
-    marginBottom: 8,
+  header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 40 },
+  wordmark: { fontFamily: "Instrument Serif", fontSize: 32, color: C.ink },
+  wordmarkF: { fontFamily: "Instrument Serif", fontSize: 32, fontStyle: "italic" },
+  wordmarkDot: { color: C.clay },
+  senderMeta: { color: C.ink3, fontSize: 9, lineHeight: 1.6, marginTop: 10 },
+  invoiceTitle: { fontFamily: "Instrument Serif", fontSize: 36, color: C.ink, textAlign: "right" },
+  invoiceNo: { fontFamily: "JetBrains Mono", fontSize: 11, color: C.ink2, textAlign: "right", marginTop: 4 },
+
+  addressRow: { flexDirection: "row", marginBottom: 30 },
+  addressCol: { flex: 1 },
+  cap: { fontSize: 8, letterSpacing: 1.4, color: C.inkMute, textTransform: "uppercase", marginBottom: 5 },
+  serif: { fontFamily: "Instrument Serif", fontSize: 16, color: C.ink },
+  small: { fontSize: 10, color: C.ink2, lineHeight: 1.6, marginTop: 4 },
+
+  tableHead: {
+    flexDirection: "row", borderTopWidth: 1, borderTopColor: C.ink,
+    borderBottomWidth: 1, borderBottomColor: "rgba(26,24,21,0.12)", paddingVertical: 6,
   },
-  companySlogan: {
-    color: '#009688',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginTop: 2,
+  th: { fontSize: 8, color: C.inkMute, textTransform: "uppercase", letterSpacing: 1.2 },
+  row: {
+    flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "rgba(26,24,21,0.06)",
+    paddingVertical: 8, alignItems: "center",
   },
-  addressBlock: {
-    marginBottom: 8,
-    fontSize: 11,
-    lineHeight: 1.3,
+  cellNum:  { width: 30, fontFamily: "JetBrains Mono", color: C.ink3, fontSize: 9 },
+  cellDesc: { flex: 1, fontSize: 11 },
+  cellQty:  { width: 50, textAlign: "right", fontFamily: "JetBrains Mono", fontSize: 10 },
+  cellUnit: { width: 50, textAlign: "right", fontFamily: "JetBrains Mono", color: C.ink3, fontSize: 10 },
+  cellPrice:{ width: 80, textAlign: "right", fontFamily: "JetBrains Mono", fontSize: 10 },
+  cellVat:  { width: 50, textAlign: "right", fontFamily: "JetBrains Mono", color: C.ink3, fontSize: 10 },
+  cellSum:  { width: 90, textAlign: "right", fontFamily: "JetBrains Mono", fontSize: 11 },
+
+  totalsBox: { marginTop: 20, alignSelf: "flex-end", minWidth: 280 },
+  totalsRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, fontSize: 11 },
+  totalsLabel: { color: C.ink3 },
+  totalsFinal: {
+    flexDirection: "row", justifyContent: "space-between",
+    paddingTop: 12, marginTop: 6, borderTopWidth: 2, borderTopColor: C.ink,
   },
-  invoiceInfo: {
-    alignItems: 'flex-end',
-    fontSize: 11,
-    marginBottom: 8,
+  totalsFinalLabel: { fontFamily: "Instrument Serif", fontSize: 18 },
+  totalsFinalValue: { fontFamily: "JetBrains Mono", fontSize: 18 },
+
+  paymentBox: { marginTop: 30, padding: 20, backgroundColor: C.paper2, flexDirection: "row" },
+  paymentCol: { flex: 1 },
+  paymentValue: { fontFamily: "JetBrains Mono", fontSize: 13, marginTop: 4 },
+
+  noteBlock: {
+    marginTop: 24, fontFamily: "Instrument Serif", fontStyle: "italic",
+    fontSize: 12, color: C.ink2, lineHeight: 1.5,
   },
-  invoiceTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  table: {
-    display: 'flex',
-    width: 'auto',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottom: '1px solid #eee',
-    alignItems: 'center',
-    minHeight: 24,
-  },
-  tableHeader: {
-    fontWeight: 'bold',
-    backgroundColor: '#f5f5f5',
-  },
-  tableCell: {
-    padding: 4,
-    fontSize: 11,
-    flexGrow: 1,
-    flexBasis: 0,
-    borderRight: '1px solid #eee',
-  },
-  tableCellLast: {
-    borderRight: 0,
-  },
-  notes: {
-    fontSize: 10,
-    marginTop: 8,
-    marginBottom: 8,
-    color: '#444',
-  },
-  totalsBlock: {
-    alignItems: 'flex-end',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  totalsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  totalsLabel: {
-    minWidth: 120,
-    textAlign: 'right',
-    marginRight: 8,
-  },
-  totalsValue: {
-    minWidth: 80,
-    textAlign: 'right',
-    fontWeight: 'bold',
-  },
-  paymentTerms: {
-    fontSize: 11,
-    marginTop: 12,
-    color: '#222',
-  },
-  paymentBlock: {
-    marginTop: 16,
-    padding: 12,
-    border: '1px solid #d1d5db',
-    backgroundColor: '#f9fafb',
-  },
-  paymentTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    color: '#0f172a',
-  },
-  paymentRow: {
-    flexDirection: 'row',
-    fontSize: 11,
-    marginBottom: 2,
-  },
-  paymentLabel: {
-    width: 90,
-    color: '#475569',
-  },
-  paymentValue: {
-    flexGrow: 1,
-    fontWeight: 'bold',
-    color: '#0f172a',
-  },
+
   footer: {
-    position: 'absolute',
-    bottom: 24,
-    left: 32,
-    right: 32,
-    fontSize: 9,
-    color: '#888',
-    textAlign: 'center',
+    position: "absolute", bottom: 30, left: 50, right: 50,
+    flexDirection: "row", justifyContent: "space-between",
+    paddingTop: 10, borderTopWidth: 1, borderTopColor: "rgba(26,24,21,0.1)",
+    fontSize: 8, color: C.inkMute,
   },
 });
 
-// Helper for Norwegian date format
-function formatDateNo(date: string | Date) {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return '';
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}.${month}.${year}`;
-}
-
-// Types for props
-interface InvoicePDFProps {
-  company: {
-    name: string;
-    address: string;
-    orgNumber: string;
-    email: string;
-    phone?: string;
-    website?: string;
-    logoUrl?: string;
-    slogan?: string;
-    bankAccount?: string;
-  };
-  client: {
-    name: string;
-    address: string;
-    postalCode: string;
-    city: string;
-    country: string;
-  };
+export interface InvoicePDFProps {
   invoice: {
     number: string;
-    date: string;
-    dueDate?: string;
-    orderNumber?: string;
-    items: Array<{
-      number: string;
-      description: string;
-      quantity: number;
-      unit: string;
-      unitPrice: number;
-      amount: number;
-      vat: number;
-    }>;
-    notes?: string;
-    subtotal: number;
-    vat: number;
-    total: number;
-    currency: string;
-    paymentTerms: string;
+    issue_date: string;
+    due_date: string;
+    sender: { name: string; address: string; org_no: string; email: string; phone?: string };
+    recipient: { name: string; company?: string; address: string; org_no?: string };
+    references?: { ours?: string; theirs?: string };
+    items: Array<{ description: string; quantity: number; unit: string; unit_price: number; vat_rate: number }>;
+    payment: { account: string; kid?: string; iban?: string };
+    note?: string;
   };
 }
 
-export const InvoicePDF: React.FC<InvoicePDFProps> = ({ company, client, invoice }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Image src={company.logoUrl || LOGO_URL} style={styles.logo} />
-          {company.slogan && <Text style={styles.companySlogan}>{company.slogan}</Text>}
-        </View>
-        <View style={styles.invoiceInfo}>
-          <Text style={styles.invoiceTitle}>Faktura</Text>
-          <Text>Fakturanummer: {invoice.number}</Text>
-          <Text>Dato: {formatDateNo(invoice.date)}</Text>
-          {invoice.orderNumber && <Text>Webordrenr.: {invoice.orderNumber}</Text>}
-        </View>
-      </View>
+const fmt = (n: number) =>
+  n.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-      {/* Address blocks */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-        <View style={styles.addressBlock}>
-          <Text>Leveringsadresse:</Text>
-          <Text>{client.name}</Text>
-          <Text>{client.address}</Text>
-          <Text>{client.postalCode} {client.city}</Text>
-          <Text>{client.country}</Text>
-        </View>
-        <View style={styles.addressBlock}>
-          <Text>{company.name}</Text>
-          <Text>{company.address}</Text>
-          <Text>Org.nr: {company.orgNumber}</Text>
-          <Text>{company.email}</Text>
-          {company.phone && <Text>{company.phone}</Text>}
-          {company.website && <Text>{company.website}</Text>}
-        </View>
-      </View>
+export function InvoicePDF({ invoice: i }: InvoicePDFProps) {
+  const subtotal = i.items.reduce((s, it) => s + it.quantity * it.unit_price, 0);
+  const vat = i.items.reduce((s, it) => s + it.quantity * it.unit_price * (it.vat_rate / 100), 0);
+  const total = subtotal + vat;
 
-      {/* Table */}
-      <View style={styles.table}>
-        <View style={[styles.tableRow, styles.tableHeader]}>
-          <Text style={styles.tableCell}>Nummer</Text>
-          <Text style={styles.tableCell}>Beskrivelse</Text>
-          <Text style={styles.tableCell}>Antall</Text>
-          <Text style={styles.tableCell}>Enhet</Text>
-          <Text style={styles.tableCell}>Enhetspris</Text>
-          <Text style={styles.tableCell}>Beløp</Text>
-          <Text style={[styles.tableCell, styles.tableCellLast]}>Moms</Text>
-        </View>
-        {invoice.items.map((item, idx) => (
-          <View style={styles.tableRow} key={idx}>
-            <Text style={styles.tableCell}>{item.number}</Text>
-            <Text style={styles.tableCell}>{item.description}</Text>
-            <Text style={styles.tableCell}>{item.quantity}</Text>
-            <Text style={styles.tableCell}>{item.unit}</Text>
-            <Text style={styles.tableCell}>{item.unitPrice.toFixed(2)}</Text>
-            <Text style={styles.tableCell}>{item.amount.toFixed(2)}</Text>
-            <Text style={[styles.tableCell, styles.tableCellLast]}>{item.vat}%</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Notes */}
-      {invoice.notes && <Text style={styles.notes}>{invoice.notes}</Text>}
-
-      {/* Totals */}
-      <View style={styles.totalsBlock}>
-        <View style={styles.totalsRow}>
-          <Text style={styles.totalsLabel}>I alt {invoice.currency} ekskl. mva</Text>
-          <Text style={styles.totalsValue}>{invoice.subtotal.toFixed(2)}</Text>
-        </View>
-        <View style={styles.totalsRow}>
-          <Text style={styles.totalsLabel}>Mva</Text>
-          <Text style={styles.totalsValue}>{invoice.vat.toFixed(2)}</Text>
-        </View>
-        <View style={styles.totalsRow}>
-          <Text style={[styles.totalsLabel, { fontWeight: 'bold' }]}>I alt {invoice.currency} inkl. mva</Text>
-          <Text style={[styles.totalsValue, { fontWeight: 'bold' }]}>{invoice.total.toFixed(2)}</Text>
-        </View>
-      </View>
-
-      {/* Payment information — pay via nettbank */}
-      {company.bankAccount && (
-        <View style={styles.paymentBlock}>
-          <Text style={styles.paymentTitle}>Betalingsinformasjon</Text>
-          <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Kontonummer:</Text>
-            <Text style={styles.paymentValue}>{company.bankAccount}</Text>
-          </View>
-          <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Merknad/KID:</Text>
-            <Text style={styles.paymentValue}>{invoice.number}</Text>
-          </View>
-          {invoice.dueDate && (
-            <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Forfall:</Text>
-              <Text style={styles.paymentValue}>{formatDateNo(invoice.dueDate)}</Text>
+  return (
+    <Document title={`Faktura ${i.number}`}>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.paper}>
+          {/* HEADER */}
+          <View style={styles.header}>
+            <View>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={styles.wordmarkF}>F</Text>
+                <Text style={styles.wordmark}>akturio</Text>
+                <Text style={[styles.wordmark, styles.wordmarkDot]}>.</Text>
+              </View>
+              <Text style={styles.senderMeta}>
+                {i.sender.name}{"\n"}{i.sender.address}{"\n"}
+                Org.nr {i.sender.org_no} MVA{"\n"}{i.sender.email}
+                {i.sender.phone ? ` · ${i.sender.phone}` : ""}
+              </Text>
             </View>
-          )}
-          <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Beløp:</Text>
-            <Text style={styles.paymentValue}>{invoice.total.toFixed(2)} {invoice.currency}</Text>
+            <View style={{ marginTop: 30 }}>
+              <Text style={styles.invoiceTitle}>Faktura</Text>
+              <Text style={styles.invoiceNo}>No. {i.number}</Text>
+            </View>
+          </View>
+
+          {/* ADDRESS ROW */}
+          <View style={styles.addressRow}>
+            <View style={styles.addressCol}>
+              <Text style={styles.cap}>Faktureres til</Text>
+              <Text style={styles.serif}>{i.recipient.company ?? i.recipient.name}</Text>
+              <Text style={styles.small}>
+                {i.recipient.company ? `v/ ${i.recipient.name}\n` : ""}
+                {i.recipient.address}
+                {i.recipient.org_no ? `\nOrg.nr ${i.recipient.org_no}` : ""}
+              </Text>
+            </View>
+            <View style={styles.addressCol}>
+              <Text style={styles.cap}>Detaljer</Text>
+              <DetailRow label="Faktura-dato" value={i.issue_date} />
+              <DetailRow label="Forfallsdato" value={i.due_date} />
+              {i.references?.ours && <DetailRow label="Vår referanse" value={i.references.ours} />}
+              {i.references?.theirs && <DetailRow label="Deres referanse" value={i.references.theirs} />}
+            </View>
+          </View>
+
+          {/* ITEMS */}
+          <View style={styles.tableHead}>
+            <Text style={[styles.cellNum, styles.th]}>#</Text>
+            <Text style={[styles.cellDesc, styles.th]}>Beskrivelse</Text>
+            <Text style={[styles.cellQty, styles.th]}>Antall</Text>
+            <Text style={[styles.cellUnit, styles.th]}>Enhet</Text>
+            <Text style={[styles.cellPrice, styles.th]}>Á pris</Text>
+            <Text style={[styles.cellVat, styles.th]}>Mva</Text>
+            <Text style={[styles.cellSum, styles.th]}>Sum</Text>
+          </View>
+          {i.items.map((it, idx) => (
+            <View key={idx} style={styles.row}>
+              <Text style={styles.cellNum}>{String(idx + 1).padStart(2, "0")}</Text>
+              <Text style={styles.cellDesc}>{it.description}</Text>
+              <Text style={styles.cellQty}>{it.quantity}</Text>
+              <Text style={styles.cellUnit}>{it.unit}</Text>
+              <Text style={styles.cellPrice}>{fmt(it.unit_price)}</Text>
+              <Text style={styles.cellVat}>{it.vat_rate}%</Text>
+              <Text style={styles.cellSum}>{fmt(it.quantity * it.unit_price)}</Text>
+            </View>
+          ))}
+
+          {/* TOTALS */}
+          <View style={styles.totalsBox}>
+            <View style={styles.totalsRow}>
+              <Text style={styles.totalsLabel}>Sum eks. mva</Text>
+              <Text style={{ fontFamily: "JetBrains Mono" }}>{fmt(subtotal)}</Text>
+            </View>
+            <View style={styles.totalsRow}>
+              <Text style={styles.totalsLabel}>MVA 25%</Text>
+              <Text style={{ fontFamily: "JetBrains Mono" }}>{fmt(vat)}</Text>
+            </View>
+            <View style={styles.totalsFinal}>
+              <Text style={styles.totalsFinalLabel}>Å betale NOK</Text>
+              <Text style={styles.totalsFinalValue}>{fmt(total)}</Text>
+            </View>
+          </View>
+
+          {/* PAYMENT */}
+          <View style={styles.paymentBox}>
+            <View style={styles.paymentCol}>
+              <Text style={styles.cap}>Konto</Text>
+              <Text style={styles.paymentValue}>{i.payment.account}</Text>
+            </View>
+            {i.payment.kid && (
+              <View style={styles.paymentCol}>
+                <Text style={styles.cap}>KID</Text>
+                <Text style={styles.paymentValue}>{i.payment.kid}</Text>
+              </View>
+            )}
+            {i.payment.iban && (
+              <View style={styles.paymentCol}>
+                <Text style={styles.cap}>IBAN</Text>
+                <Text style={styles.paymentValue}>{i.payment.iban}</Text>
+              </View>
+            )}
+          </View>
+
+          {i.note && <Text style={styles.noteBlock}>&ldquo;{i.note}&rdquo;</Text>}
+
+          <View style={styles.footer}>
+            <Text>Side 1 av 1</Text>
+            <Text>Sendt med Fakturio · fakturio.no</Text>
+            <Text>Faktura no. {i.number}</Text>
           </View>
         </View>
-      )}
+      </Page>
+    </Document>
+  );
+}
 
-      {/* Payment terms */}
-      <Text style={styles.paymentTerms}><Text style={{ fontWeight: 'bold' }}>Betalingsbetingelser:</Text> {invoice.paymentTerms}</Text>
-
-      {/* Footer */}
-      <Text style={styles.footer}>
-        {company.name}  -  {company.address}  -  Org.nr: {company.orgNumber}  -  {company.email}  {company.website ? `-  ${company.website}` : ''}
-      </Text>
-    </Page>
-  </Document>
-); 
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 }}>
+      <Text style={{ color: C.ink3, fontSize: 10 }}>{label}</Text>
+      <Text style={{ fontFamily: "JetBrains Mono", fontSize: 10 }}>{value}</Text>
+    </View>
+  );
+}

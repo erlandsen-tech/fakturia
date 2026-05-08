@@ -201,46 +201,40 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
               <PDFDownloadLink
                 document={
                   <InvoicePDF
-                    company={{
-                      name: companySettings.company_name,
-                      address: [companySettings.address_line1, companySettings.address_line2].filter(Boolean).join(', '),
-                      orgNumber: companySettings.organization_number,
-                      email: companySettings.email,
-                      phone: companySettings.phone,
-                      website: companySettings.website,
-                      slogan: companySettings.slogan,
-                      logoUrl: companySettings.logo_url,
-                      bankAccount: companySettings.bank_account,
-                    }}
-                    client={{
-                      name: invoice.client.name,
-                      address: invoice.client.company || '',
-                      postalCode: '',
-                      city: '',
-                      country: '',
-                    }}
                     invoice={{
                       number: invoice.invoice_number,
-                      date: invoice.issue_date,
-                      dueDate: invoice.due_date,
-                      orderNumber: '',
-                      items: invoice.items.map((item, idx) => ({
-                        number: String(idx + 1),
+                      issue_date: invoice.issue_date,
+                      due_date: invoice.due_date,
+                      sender: {
+                        name: companySettings.company_name,
+                        address: [
+                          companySettings.address_line1,
+                          companySettings.address_line2,
+                          [companySettings.postal_code, companySettings.city].filter(Boolean).join(' '),
+                          companySettings.country,
+                        ]
+                          .filter(Boolean)
+                          .join('\n'),
+                        org_no: companySettings.organization_number,
+                        email: companySettings.email,
+                        phone: companySettings.phone,
+                      },
+                      recipient: {
+                        name: invoice.client.name,
+                        company: invoice.client.company || undefined,
+                        address: '',
+                      },
+                      items: invoice.items.map((item) => ({
                         description: item.description,
                         quantity: item.quantity,
-                        unit: 'Stk',
-                        unitPrice: item.unit_price,
-                        amount: item.amount,
-                        vat: item.vat_rate || 25,
+                        unit: 'stk',
+                        unit_price: item.unit_price,
+                        vat_rate: item.vat_rate || 25,
                       })),
-                      notes: invoice.notes,
-                      subtotal: subtotalAmount,
-                      vat: totalVatAmount,
-                      total: totalAmount,
-                      currency: 'NOK',
-                      paymentTerms: invoice.due_date
-                        ? `Betal til kontoen ovenfor med fakturanummer som merknad. Forfallsdato: ${new Date(invoice.due_date).toLocaleDateString('nb-NO')}.`
-                        : 'Betal til kontoen ovenfor med fakturanummer som merknad.',
+                      payment: {
+                        account: companySettings.bank_account || '',
+                      },
+                      note: invoice.notes,
                     }}
                   />
                 }

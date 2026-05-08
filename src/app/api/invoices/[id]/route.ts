@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchUserRecord, updateUserRecord, deleteUserRecord, getAuthenticatedUser } from '@/lib/auth';
 import { createClient } from '@/utils/supabase/server';
 import { updateInvoiceSchema } from '@/lib/validations/invoice';
-import { renderInvoicePdf } from '@/lib/pdf';
+import { renderLegacyInvoicePdf } from '@/lib/pdf';
 import { sendInvoiceEmail } from '@/lib/email';
 import type { InvoiceWithDetails } from '@/types/database';
 
@@ -180,7 +180,7 @@ export async function PATCH(
       const clientEmail: string | null | undefined = fullInvoice?.client?.email;
 
       if (process.env.RESEND_API_KEY && clientEmail) {
-        const pdfBuffer = await renderInvoicePdf({
+        const pdfBuffer = await renderLegacyInvoicePdf({
           company: {
             name: company?.company_name || 'Mitt firma',
             address: [company?.address_line1, company?.address_line2, company?.postal_code, company?.city, company?.country].filter(Boolean).join(', '),
