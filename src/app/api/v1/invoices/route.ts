@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createInvoiceSchema } from '@/lib/validations/invoice';
-import { renderInvoicePdf } from '@/lib/pdf';
+import { renderLegacyInvoicePdf } from '@/lib/pdf';
 import { sendInvoiceEmail } from '@/lib/email';
 import crypto from 'crypto';
 
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
             .eq('user_id', userId)
             .maybeSingle();
 
-          const pdfBuffer = await renderInvoicePdf({
+          const pdfBuffer = await renderLegacyInvoicePdf({
             company: {
               name: company?.company_name || 'Mitt firma',
               address: [company?.address_line1, company?.address_line2, company?.postal_code, company?.city, company?.country].filter(Boolean).join(', '),

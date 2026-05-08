@@ -7,10 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Link from 'next/link';
 import { Plus, Trash2, Save, Send, Coins, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Client, InvoiceStatus, Profile } from '@/types/database';
 import { t } from '@/lib/i18n';
+import { Wordmark } from '@/components/brand/Wordmark';
+import { AIAssistCard } from '@/components/invoices/AIAssistCard';
+import { ChecksCard } from '@/components/invoices/ChecksCard';
 
 interface InvoiceItem {
   description: string;
@@ -245,9 +249,56 @@ export default function CreateInvoicePage() {
     }
   };
 
+  const preflight = [
+    { ok: !!formData.client_id, label: 'Kunde valgt' },
+    { ok: items.some((i) => i.description.trim().length > 0), label: 'Minst én linje med beskrivelse' },
+    { ok: items.every((i) => i.unit_price > 0), label: 'Alle linjer har en pris' },
+    { ok: !!formData.due_date, label: 'Forfallsdato satt' },
+    { ok: !!hasEnoughPoints(), label: 'Du har nok fakturapoeng' },
+  ];
+
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="mb-8">
+    <div className="bg-paper-grain min-h-screen px-6 lg:px-12 py-8">
+      <div className="max-w-7xl mx-auto">
+        {/* TOP BAR */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3 text-ink-3">
+            <Link href="/invoices" className="hover:text-ink">← Fakturaer</Link>
+            <span>·</span>
+            <span className="font-display text-[22px] text-ink">Ny faktura</span>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" type="button" onClick={() => saveInvoice('draft')} disabled={loading}>
+              <Save className="h-4 w-4 mr-2" />
+              {t('Save as Draft')}
+            </Button>
+            <Button variant="clay" type="button" onClick={() => saveInvoice('sent')} disabled={loading || !hasEnoughPoints()}>
+              <Send className="h-4 w-4 mr-2" />
+              {t('Create & Send')} →
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
+          {/* PAPER CARD with the form */}
+          <div className="bg-white px-10 lg:px-14 py-12 shadow-paper border border-ink/8">
+            <div className="flex justify-between mb-9">
+              <div>
+                <Wordmark size={0.9} />
+                {companySettings && (
+                  <div className="text-xs text-ink-3 mt-2">
+                    {companySettings.company_name} · {companySettings.address_line1}
+                    {companySettings.organization_number ? ` · ${companySettings.organization_number}` : ''}
+                  </div>
+                )}
+              </div>
+              <div className="text-right">
+                <div className="cap text-ink-mute">Faktura</div>
+                <div className="font-mono text-[20px] mt-0.5">Ny</div>
+              </div>
+            </div>
+            <hr className="hairline mb-6" />
+      <div className="mb-8 hidden">
         <h1 className="text-3xl font-bold">{t('Create New Invoice')}</h1>
         <p className="text-muted-foreground">{t('Fill in the details below to create a new invoice')}</p>
       </div>
@@ -561,23 +612,20 @@ export default function CreateInvoicePage() {
           >
             {t('Cancel')}
           </Button>
-          <Button
-            onClick={() => saveInvoice('draft')}
-            variant="outline"
-            disabled={loading}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {t('Save as Draft')}
-          </Button>
-          <Button
-            onClick={() => saveInvoice('sent')}
-            disabled={loading || !hasEnoughPoints()}
-          >
-            <Send className="h-4 w-4 mr-2" />
-            {t('Create & Send')}
-          </Button>
+        </div>
+      </div>
+          </div>
+
+          {/* AI ASSIST SIDEBAR */}
+          <aside className="flex flex-col gap-5">
+            <AIAssistCard onApply={() => { /* AI-side patching is wired up in a follow-up; keep no-op for now. */ }} />
+            <ChecksCard items={preflight} />
+            <p className="px-4 text-xs text-ink-3 leading-[1.6] border-t border-ink/10 pt-4">
+              Når du trykker <strong>Send</strong> får mottakeren en e-post med en lenke. De kan betale med Vipps eller kort. Du får varsel når de åpner og når de betaler.
+            </p>
+          </aside>
         </div>
       </div>
     </div>
   );
-} 
+}
