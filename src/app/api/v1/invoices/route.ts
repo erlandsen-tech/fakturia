@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createInvoiceSchema } from '@/lib/validations/invoice';
+import { renderInvoicePdf } from '@/lib/pdf';
+import { sendInvoiceEmail } from '@/lib/email';
 import crypto from 'crypto';
 
 // Rate limiting (simple in-memory, use Redis/Upstash for production)
@@ -117,12 +119,19 @@ export async function POST(request: NextRequest) {
       clientId = newClient.id;
     }
 
-    // Calculate totals
-    const totalAmount = data.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-    const totalVat = data.items.reduce((sum, item) => sum + (item.quantity * item.unit_price * item.vat_rate / 100), 0);
+    // Calculate totals (NOK øre)
+    const subtotalAmount = data.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+    const vatAmount = data.items.reduce((sum, item) => sum + (item.quantity * item.unit_price * item.vat_rate / 100), 0);
+    const totalAmount = subtotalAmount + vatAmount;
 
     const issueDate = data.issue_date || new Date().toISOString();
     const dueDate = new Date(new Date(issueDate).getTime() + data.due_days * 86400000).toISOString();
+
+    // Allocate invoice number atomically (per-user sequence)
+    const { data: invoiceNumber, error: numberError } = await supabase.rpc('next_invoice_number', { p_user_id: userId });
+    if (numberError || !invoiceNumber) {
+      return NextResponse.json({ error: 'Failed to allocate invoice number' }, { status: 500 });
+    }
 
     // Create invoice
     const { data: invoice, error: invoiceError } = await supabase
@@ -130,14 +139,16 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: userId,
         client_id: clientId,
+        invoice_number: invoiceNumber,
         status: data.send ? 'sent' : 'draft',
         issue_date: issueDate,
         due_date: dueDate,
         notes: data.notes || null,
+        subtotal_amount: subtotalAmount,
+        vat_amount: vatAmount,
         total_amount: totalAmount,
-        total_vat: totalVat,
       })
-      .select('id, invoice_number, status, issue_date, due_date, total_amount, total_vat')
+      .select('id, invoice_number, status, issue_date, due_date, subtotal_amount, vat_amount, total_amount')
       .single();
 
     if (invoiceError || !invoice) {
@@ -151,7 +162,8 @@ export async function POST(request: NextRequest) {
       quantity: item.quantity,
       unit_price: item.unit_price,
       vat_rate: item.vat_rate,
-      total: item.quantity * item.unit_price,
+      vat_amount: item.quantity * item.unit_price * item.vat_rate / 100,
+      amount: item.quantity * item.unit_price,
     }));
 
     const { error: itemsError } = await supabase
@@ -162,19 +174,88 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invoice items' }, { status: 500 });
     }
 
-    // If send=true, deduct point and trigger email
+    // If send=true, deduct point + render PDF + email
+    let emailDelivery: { delivered: boolean; reason?: string } | null = null;
     if (data.send) {
       const { data: deductResult } = await supabase.rpc('deduct_invoice_point', { p_user_id: userId });
-      if (deductResult === null) {
-        // Not enough points — revert to draft
+      if (deductResult === null || deductResult === undefined) {
         await supabase.from('invoices').update({ status: 'draft' }).eq('id', invoice.id);
         return NextResponse.json({
-          error: 'Insufficient invoice points. Purchase more or upgrade your plan.',
+          error: 'Insufficient invoice points. Purchase more.',
           invoice_id: invoice.id,
           status: 'draft',
         }, { status: 402 });
       }
-      // TODO: Trigger email delivery via Resend
+
+      try {
+        if (process.env.RESEND_API_KEY && data.client_email) {
+          const { data: company } = await supabase
+            .from('company_settings')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          const pdfBuffer = await renderInvoicePdf({
+            company: {
+              name: company?.company_name || 'Mitt firma',
+              address: [company?.address_line1, company?.address_line2, company?.postal_code, company?.city, company?.country].filter(Boolean).join(', '),
+              orgNumber: company?.organization_number || '',
+              email: company?.email || '',
+              phone: company?.phone || undefined,
+              website: company?.website || undefined,
+            },
+            client: {
+              name: data.client_name,
+              address: data.client_address || '',
+              postalCode: '',
+              city: '',
+              country: 'Norge',
+            },
+            invoice: {
+              number: invoice.invoice_number || invoice.id.slice(0, 8),
+              date: invoice.issue_date,
+              items: items.map((it, idx) => ({
+                number: String(idx + 1),
+                description: it.description,
+                quantity: Number(it.quantity),
+                unit: 'stk',
+                unitPrice: Number(it.unit_price),
+                amount: Number(it.amount),
+                vat: Number(it.vat_rate),
+              })),
+              notes: data.notes,
+              subtotal: Number(invoice.subtotal_amount || 0),
+              vat: Number(invoice.vat_amount || 0),
+              total: Number(invoice.total_amount || 0),
+              currency: 'NOK',
+              paymentTerms: `Betales innen ${new Date(invoice.due_date).toLocaleDateString('nb-NO')}`,
+            },
+          });
+
+          await sendInvoiceEmail({
+            to: data.client_email,
+            invoiceNumber: invoice.invoice_number || invoice.id.slice(0, 8),
+            companyName: company?.company_name || 'Mitt firma',
+            totalLabel: `${Number(invoice.total_amount || 0).toFixed(2)} NOK`,
+            pdfBuffer,
+          });
+          emailDelivery = { delivered: true };
+        } else {
+          emailDelivery = {
+            delivered: false,
+            reason: !process.env.RESEND_API_KEY ? 'email_not_configured' : 'client_has_no_email',
+          };
+        }
+      } catch (emailErr) {
+        console.error('Email delivery failed (refunding point):', emailErr);
+        await supabase.rpc('add_invoice_points', { p_user_id: userId, p_points: 1 });
+        await supabase.from('invoices').update({ status: 'draft' }).eq('id', invoice.id);
+        return NextResponse.json({
+          error: 'Failed to deliver invoice. Point refunded.',
+          invoice_id: invoice.id,
+          status: 'draft',
+        }, { status: 502 });
+      }
     }
 
     return NextResponse.json({
@@ -183,9 +264,11 @@ export async function POST(request: NextRequest) {
       status: invoice.status,
       issue_date: invoice.issue_date,
       due_date: invoice.due_date,
+      subtotal_amount: invoice.subtotal_amount,
+      vat_amount: invoice.vat_amount,
       total_amount: invoice.total_amount,
-      total_vat: invoice.total_vat,
       items: items,
+      ...(emailDelivery && { email: emailDelivery }),
     }, { status: 201 });
 
   } catch (error) {
@@ -214,7 +297,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('invoices')
-    .select('id, invoice_number, status, issue_date, due_date, total_amount, total_vat, clients(name)')
+    .select('id, invoice_number, status, issue_date, due_date, subtotal_amount, vat_amount, total_amount, clients(name)')
     .eq('user_id', userId)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })

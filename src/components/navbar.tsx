@@ -39,7 +39,7 @@ export default function Navbar() {
     <header className="border-b border-border">
       <div className="container mx-auto py-4 flex justify-between items-center">
         <Link href={user ? "/dashboard" : "/"} className="text-2xl font-bold">
-          Fakturia
+          Fakturio
         </Link>
         {user && (
           <nav className="hidden md:flex items-center space-x-6">

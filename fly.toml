@@ -7,13 +7,19 @@ primary_region = "ams"
 
 [build]
   dockerfile = "Dockerfile"
-
-[deploy]
-  release_command = "npx prisma migrate deploy || true"
+  [build.args]
+    NEXT_PUBLIC_BASE_URL = "https://fakturio.no"
+    NEXT_PUBLIC_SUPABASE_URL = "https://xemufotqckljtkqoqbsf.supabase.co"
+    NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlbXVmb3RxY2tsanRrcW9xYnNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NjQzMjUsImV4cCI6MjA5MzU0MDMyNX0.BQMPHIf4M30mF9202DMfSq-AHCc3yv_k7R_yyorDHvo"
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51T91lFGczqI2tDLn2iAXYdf0lAk7A9ssakNoruMsyChyxgRF3GY8kPBGbit1m5Rp4FuCEkxeqX8U6ysTPZFQhAsd00F6pdJhFP"
 
 [env]
   PORT = "3003"
   NODE_ENV = "production"
+  NEXT_PUBLIC_BASE_URL = "https://fakturio.no"
+  NEXT_PUBLIC_SUPABASE_URL = "https://xemufotqckljtkqoqbsf.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlbXVmb3RxY2tsanRrcW9xYnNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NjQzMjUsImV4cCI6MjA5MzU0MDMyNX0.BQMPHIf4M30mF9202DMfSq-AHCc3yv_k7R_yyorDHvo"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51T91lFGczqI2tDLn2iAXYdf0lAk7A9ssakNoruMsyChyxgRF3GY8kPBGbit1m5Rp4FuCEkxeqX8U6ysTPZFQhAsd00F6pdJhFP"
 
 [http_service]
   internal_port = 3003
@@ -28,7 +34,7 @@ primary_region = "ams"
     grace_period = "10s"
     interval = "30s"
     method = "get"
-    path = "/api/health"
+    path = "/api/health/"
     timeout = "5s"
 
 [[vm]]

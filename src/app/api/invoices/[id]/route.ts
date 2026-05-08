@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchUserRecord, updateUserRecord, deleteUserRecord } from '@/lib/auth';
-import { createClient } from '@supabase/supabase-js';
+import { fetchUserRecord, updateUserRecord, deleteUserRecord, getAuthenticatedUser } from '@/lib/auth';
+import { createClient } from '@/utils/supabase/server';
+import { updateInvoiceSchema } from '@/lib/validations/invoice';
+import { renderInvoicePdf } from '@/lib/pdf';
+import { sendInvoiceEmail } from '@/lib/email';
 import type { InvoiceWithDetails } from '@/types/database';
-
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /**
  * GET /api/invoices/[id] - Fetch specific invoice with ownership verification
@@ -61,99 +57,42 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    console.log('PUT /api/invoices/[id] - Starting update for invoice:', params.id);
-    
-    const body = await request.json();
-    console.log('Request body received:', body);
-    
-    // Remove any fields that shouldn't be updated by users
-    const allowedFields = [
-      'issue_date',
-      'due_date', 
-      'status',
-      'notes',
-      'delivery_time',
-      'delivery_place',
-      'vat_rate'
-    ];
-    
-    const updates = Object.keys(body)
-      .filter(key => allowedFields.includes(key))
-      .reduce((obj, key) => {
-        let value = body[key];
-        
-        // Handle special cases for different field types
-        if (key === 'delivery_time') {
-          // Convert empty string to null for timestamp fields
-          if (value === '' || value === undefined) {
-            value = null;
-          }
-        } else if (key === 'notes' || key === 'delivery_place') {
-          // Convert empty strings to null for text fields
-          if (value === '' || value === undefined) {
-            value = null;
-          }
-        } else if (key === 'vat_rate') {
-          // Ensure vat_rate is a number
-          value = parseFloat(value) || 0;
-        }
-        
-        obj[key] = value;
-        return obj;
-      }, {} as Record<string, any>);
-
-    console.log('Filtered updates to apply:', updates);
-
-    if (Object.keys(updates).length === 0) {
-      console.log('No valid fields to update');
-      return NextResponse.json({ 
-        message: 'No valid fields to update',
-        data: { id: params.id }
-      });
+    const body = await request.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    console.log('Calling updateUserRecord...');
-    await updateUserRecord('invoices', params.id, updates);
-    console.log('updateUserRecord completed successfully');
+    const result = updateInvoiceSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json({
+        error: 'Validation failed',
+        details: result.error.flatten().fieldErrors,
+      }, { status: 400 });
+    }
 
-    return NextResponse.json({ 
+    if (Object.keys(result.data).length === 0) {
+      return NextResponse.json({ message: 'No valid fields to update', data: { id: params.id } });
+    }
+
+    await updateUserRecord('invoices', params.id, result.data);
+
+    return NextResponse.json({
       message: 'Invoice updated successfully',
-      data: { id: params.id, ...updates }
+      data: { id: params.id, ...result.data },
     });
   } catch (error) {
     console.error('Error updating invoice:', error);
-    
+
     if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      
       if (error.message.includes('redirect')) {
-        return NextResponse.json(
-          { error: 'Unauthorized' }, 
-          { status: 401 }
-        );
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      
       if (error.message.includes('Unauthorized')) {
-        return NextResponse.json(
-          { error: 'Access denied' }, 
-          { status: 403 }
-        );
-      }
-      
-      // Handle specific database errors
-      if (error.message.includes('invalid input syntax for type timestamp')) {
-        return NextResponse.json(
-          { error: 'Invalid date/time format provided' }, 
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to update invoice' }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 });
   }
 }
 
@@ -175,99 +114,156 @@ export async function PATCH(
       );
     }
 
-    // First, fetch the invoice to check its current status and get user_id
-    const invoice = await fetchUserRecord(
+    const user = await getAuthenticatedUser();
+
+    // Fetch invoice with ownership check (RLS-backed)
+    const invoice = await fetchUserRecord<{ status: string; user_id: string }>(
       'invoices',
       params.id,
-      '*'
+      'status, user_id'
     );
 
     if (!invoice) {
-      return NextResponse.json(
-        { error: 'Invoice not found or access denied' }, 
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Invoice not found or access denied' }, { status: 404 });
     }
 
-    // Check if invoice can be sent (only draft invoices can be sent)
-    if (invoice.status !== 'draft') {
-      return NextResponse.json(
-        { error: 'Only draft invoices can be sent' }, 
-        { status: 400 }
-      );
+    if (invoice.status === 'paid' || invoice.status === 'cancelled') {
+      return NextResponse.json({ error: 'Cannot send a paid or cancelled invoice' }, { status: 400 });
     }
 
-    // Check if user has enough invoice points
-    const { data: profile, error: profileError } = await getSupabaseAdmin()
+    // Skip point deduction for unlimited subscription tiers
+    const supabase = await createClient();
+    const { data: profile } = await supabase
       .from('profiles')
-      .select('invoice_points')
-      .eq('id', invoice.user_id)
+      .select('subscription_tier, subscription_status')
+      .eq('id', user.id)
       .maybeSingle();
 
-    if (profileError) {
-      console.error('Error fetching user profile:', profileError);
-      return NextResponse.json(
-        { error: 'Failed to check invoice points' }, 
-        { status: 500 }
-      );
-    }
+    const isUnlimited =
+      profile?.subscription_status === 'active' &&
+      (profile?.subscription_tier === 'growth' || profile?.subscription_tier === 'enterprise');
 
-    if (!profile || profile.invoice_points < 1) {
-      return NextResponse.json(
-        { error: 'Insufficient invoice points. You need at least 1 point to send an invoice.' }, 
-        { status: 400 }
-      );
-    }
-
-    // Start a transaction-like operation
-    try {
-      // Update invoice status to 'sent'
-      await updateUserRecord('invoices', params.id, { 
-        status: 'sent'
+    if (!isUnlimited) {
+      // Atomic deduct via RPC: returns null/undefined if no points to deduct
+      const { data: remaining, error: rpcError } = await supabase.rpc('deduct_invoice_point', {
+        p_user_id: user.id,
       });
 
-      // Deduct 1 invoice point from user's profile
-      const { error: updateError } = await getSupabaseAdmin()
-        .from('profiles')
-        .update({ 
-          invoice_points: profile.invoice_points - 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', invoice.user_id);
-
-      if (updateError) {
-        console.error('Error updating invoice points:', updateError);
-        
-        // Try to revert the invoice status back to draft
-        try {
-          await updateUserRecord('invoices', params.id, { status: 'draft' });
-        } catch (revertError) {
-          console.error('Failed to revert invoice status:', revertError);
-        }
-        
-        return NextResponse.json(
-          { error: 'Failed to deduct invoice points' }, 
-          { status: 500 }
-        );
+      if (rpcError) {
+        console.error('Error deducting points:', rpcError);
+        return NextResponse.json({ error: 'Failed to deduct invoice points' }, { status: 500 });
       }
 
-      return NextResponse.json({ 
-        message: 'Invoice sent successfully and 1 point deducted',
-        data: { 
-          id: params.id, 
-          status: 'sent',
-          remaining_points: profile.invoice_points - 1
-        }
-      });
-
-    } catch (error) {
-      console.error('Error in send invoice transaction:', error);
-      return NextResponse.json(
-        { error: 'Failed to send invoice' }, 
-        { status: 500 }
-      );
+      if (remaining === null || remaining === undefined) {
+        return NextResponse.json({
+          error: 'Insufficient invoice points. Purchase more or upgrade your plan.',
+        }, { status: 402 });
+      }
     }
 
+    // Render PDF and email it. If anything here fails, refund the point.
+    let emailDelivery: { delivered: boolean; reason?: string } = { delivered: false, reason: 'not_attempted' };
+    try {
+      // Fetch full invoice + items + client + company info for PDF
+      const fullInvoice = await fetchUserRecord<any>(
+        'invoices',
+        params.id,
+        '*, client:clients(*), items:invoice_items(*)'
+      );
+
+      const { data: company } = await supabase
+        .from('company_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const clientEmail: string | null | undefined = fullInvoice?.client?.email;
+
+      if (process.env.RESEND_API_KEY && clientEmail) {
+        const pdfBuffer = await renderInvoicePdf({
+          company: {
+            name: company?.company_name || 'Mitt firma',
+            address: [company?.address_line1, company?.address_line2, company?.postal_code, company?.city, company?.country].filter(Boolean).join(', '),
+            orgNumber: company?.organization_number || '',
+            email: company?.email || '',
+            phone: company?.phone || undefined,
+            website: company?.website || undefined,
+            bankAccount: company?.bank_account || undefined,
+          },
+          client: {
+            name: fullInvoice.client.name || '',
+            address: fullInvoice.client.address || '',
+            postalCode: fullInvoice.client.postal_code || '',
+            city: fullInvoice.client.city || '',
+            country: fullInvoice.client.country || 'Norge',
+          },
+          invoice: {
+            number: fullInvoice.invoice_number || params.id.slice(0, 8),
+            date: fullInvoice.issue_date,
+            dueDate: fullInvoice.due_date || undefined,
+            items: (fullInvoice.items || []).map((it: any, idx: number) => ({
+              number: String(idx + 1),
+              description: it.description,
+              quantity: Number(it.quantity),
+              unit: 'stk',
+              unitPrice: Number(it.unit_price),
+              amount: Number(it.amount),
+              vat: Number(it.vat_rate),
+            })),
+            notes: fullInvoice.notes || undefined,
+            subtotal: Number(fullInvoice.subtotal_amount || 0),
+            vat: Number(fullInvoice.vat_amount || 0),
+            total: Number(fullInvoice.total_amount || 0),
+            currency: 'NOK',
+            paymentTerms: fullInvoice.due_date
+              ? `Betal til kontoen ovenfor med fakturanummer som merknad. Forfallsdato: ${new Date(fullInvoice.due_date).toLocaleDateString('nb-NO')}.`
+              : 'Betal til kontoen ovenfor med fakturanummer som merknad.',
+          },
+        });
+
+        await sendInvoiceEmail({
+          to: clientEmail,
+          invoiceNumber: fullInvoice.invoice_number || params.id.slice(0, 8),
+          companyName: company?.company_name || 'Mitt firma',
+          totalLabel: `${Number(fullInvoice.total_amount || 0).toFixed(2)} NOK`,
+          pdfBuffer,
+        });
+        emailDelivery = { delivered: true };
+      } else {
+        emailDelivery = {
+          delivered: false,
+          reason: !process.env.RESEND_API_KEY ? 'email_not_configured' : 'client_has_no_email',
+        };
+      }
+
+      await updateUserRecord('invoices', params.id, { status: 'sent' });
+    } catch (err) {
+      console.error('Send pipeline failed, refunding point:', err);
+      if (!isUnlimited) {
+        await supabase.rpc('add_invoice_points', { p_user_id: user.id, p_points: 1 });
+      }
+      return NextResponse.json({
+        error: 'Failed to send invoice. Your point has been refunded.',
+        detail: err instanceof Error ? err.message : String(err),
+      }, { status: 500 });
+    }
+
+    const { data: refreshedProfile } = await supabase
+      .from('profiles')
+      .select('invoice_points')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    return NextResponse.json({
+      message: 'Invoice sent successfully',
+      data: {
+        id: params.id,
+        status: 'sent',
+        remaining_points: refreshedProfile?.invoice_points ?? null,
+        unlimited: isUnlimited,
+        email: emailDelivery,
+      },
+    });
   } catch (error) {
     console.error('Error sending invoice:', error);
     

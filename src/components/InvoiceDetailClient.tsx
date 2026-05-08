@@ -112,8 +112,8 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   };
 
   const handleSend = async () => {
-    if (formData.status !== 'draft') {
-      toast.error(t('Only draft invoices can be sent'));
+    if (formData.status === 'paid' || formData.status === 'cancelled') {
+      toast.error(t('Cannot send a paid or cancelled invoice'));
       return;
     }
 
@@ -178,8 +178,9 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   const totalVatAmount = invoice.items.reduce((sum, item) => sum + (item.vat_amount || 0), 0);
   const totalAmount = subtotalAmount + totalVatAmount;
 
-  // Check if invoice can be sent
-  const canSendInvoice = formData.status === 'draft';
+  // Check if invoice can be sent (draft, sent, overdue all allow sending — paid/cancelled don't)
+  const canSendInvoice = formData.status !== 'paid' && formData.status !== 'cancelled';
+  const sendButtonLabel = formData.status === 'draft' ? t('Send Invoice') : t('Send på nytt');
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -209,6 +210,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                       website: companySettings.website,
                       slogan: companySettings.slogan,
                       logoUrl: companySettings.logo_url,
+                      bankAccount: companySettings.bank_account,
                     }}
                     client={{
                       name: invoice.client.name,
@@ -220,6 +222,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                     invoice={{
                       number: invoice.invoice_number,
                       date: invoice.issue_date,
+                      dueDate: invoice.due_date,
                       orderNumber: '',
                       items: invoice.items.map((item, idx) => ({
                         number: String(idx + 1),
@@ -235,7 +238,9 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                       vat: totalVatAmount,
                       total: totalAmount,
                       currency: 'NOK',
-                      paymentTerms: 'Betal online med kredittkort',
+                      paymentTerms: invoice.due_date
+                        ? `Betal til kontoen ovenfor med fakturanummer som merknad. Forfallsdato: ${new Date(invoice.due_date).toLocaleDateString('nb-NO')}.`
+                        : 'Betal til kontoen ovenfor med fakturanummer som merknad.',
                     }}
                   />
                 }
@@ -256,7 +261,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Send className="h-4 w-4 mr-2" />
-                {sending ? t('Sending...') : t('Send Invoice')}
+                {sending ? t('Sending...') : sendButtonLabel}
               </Button>
             )}
             

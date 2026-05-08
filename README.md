@@ -1,168 +1,100 @@
-# Fakturia - Invoice Generator for Micro-Businesses
+# Fakturio
 
-Fakturia is a simple, efficient invoice generation application for micro-businesses. Generate invoices on demand, track payments, and manage your clients all in one place.
+Fakturering for norske enkeltpersonforetak og småbedrifter. Kjøp pakker med fakturaer (5/10/25), send dem som PDF på e-post, eller automatiser via API. Ingen abonnement.
 
-## Tech Stack
+## Stack
 
-- [Next.js](https://nextjs.org/) - React framework for server-side rendering and static site generation
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [Shadcn UI](https://ui.shadcn.com/) - Beautifully designed components built with Radix UI and Tailwind CSS
-- [Supabase](https://supabase.com/) - Backend as a Service (BaaS) with authentication and database
-- [Stripe](https://stripe.com/) - Payment processing
-- [Docker](https://www.docker.com/) - Containerization and deployment
+- Next.js 14 (App Router) + TypeScript
+- Supabase (Auth + Postgres + RLS)
+- Stripe Checkout (one-time bundle purchases)
+- `@react-pdf/renderer` (server-side PDF)
+- Resend (email + PDF attachments)
+- Tailwind 4 + shadcn/ui
 
-## Getting Started
+## Quick start
 
-### Prerequisites
-
-- Node.js (v18 or newer)
-- npm or yarn
-- Docker and Docker Compose
-- [Supabase](https://supabase.com/) account
-- [Stripe](https://stripe.com/) account (for payments)
-
-### Installation
-
-1. Clone the repository
-   ```bash
-   git clone https://github.com/yourusername/fakturia.git
-   cd fakturia
-   ```
-
-2. Install dependencies
+1. Install dependencies
    ```bash
    npm install
    ```
 
-3. Set up environment variables
-   Create a `.env` file in the root directory and add the following variables:
-   ```
-   # Supabase Configuration
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   DATABASE_URL=your_supabase_database_url
+2. Copy `.env.example` → `.env.local` and fill in:
+   - Supabase project URL + anon key + service role key
+   - Stripe test keys (`sk_test_…`, `pk_test_…`) and webhook secret
+   - Resend API key + verified sender address (optional — the app runs without email, but the "send" action will only mark invoices as sent without delivering them)
 
-   # Stripe Payment
-   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-   STRIPE_SECRET_KEY=your_stripe_secret_key
-   STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+3. Apply database migrations
+   ```bash
+   # Either via Supabase CLI:
+   supabase db push
+   # Or paste supabase/migrations/*.sql into the Supabase SQL editor in order
    ```
 
-4. Start the development server
+4. Run the dev server
    ```bash
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application
-
-### Running with Docker
-
-1. Build and start the containers
+5. (For Stripe) forward webhook events locally
    ```bash
-   docker-compose up --build
+   stripe listen --forward-to localhost:3000/api/stripe-webhook
    ```
+   Take the printed `whsec_…` value and set it as `STRIPE_WEBHOOK_SECRET` in `.env.local`.
 
-2. The application will be available at [http://localhost:3001](http://localhost:3001)
+## Routes
 
-### Supabase Setup
+### Pages
+- `/` — landing page
+- `/pricing` — bundle pack purchase
+- `/sign-in`, `/sign-up`
+- `/dashboard` — invoice points + activity overview
+- `/invoices`, `/invoices/create`, `/invoices/[id]`
+- `/clients`, `/clients/new`, `/clients/[id]`
+- `/settings` — company info
+- `/settings/api-keys` — generate/revoke API keys
 
-1. Create a new project in [Supabase](https://supabase.com/)
-2. Enable Email auth provider in Authentication > Providers
-3. Configure your site URL in Authentication > URL Configuration
-4. Add your redirect URLs:
-   - Development: `http://localhost:3000/auth/callback`
-   - Production: `https://your-domain.com/auth/callback`
-5. Set up your database schema using the SQL editor or migrations
+### Web API
+- `GET/POST /api/invoices` — list / create draft (no point cost)
+- `GET/PUT/PATCH/DELETE /api/invoices/[id]` — CRUD; `PATCH {action: 'send'}` deducts a point, renders PDF, emails it
+- `GET/POST /api/clients`, `GET/PUT/DELETE /api/clients/[id]`
+- `POST /api/create-checkout-session` — Stripe Checkout for `{type: 'pack', pack: 'pack_5' | 'pack_10' | 'pack_25'}`
+- `POST /api/stripe-webhook` — handles `checkout.session.completed` (adds points)
+- `GET/POST /api/api-keys`, `DELETE /api/api-keys/[id]`
 
-### Stripe Setup
+### Programmatic API (Bearer token)
+- `POST /api/v1/invoices` — create + optionally send
+- `GET /api/v1/invoices` — list
+- `GET/POST /api/v1/clients`
 
-1. Create a [Stripe](https://stripe.com/) account
-2. Get your API keys from the Stripe Dashboard
-3. Set up webhook endpoints for payment notifications
-4. Configure your products and pricing in the Stripe Dashboard
+Auth: `Authorization: Bearer fk_live_…` — generate keys at `/settings/api-keys`. Each `send: true` call deducts one invoice point.
 
-## Project Structure
-
-```
-fakturia/
-├── src/
-│   ├── app/                  # Next.js App Router pages
-│   │   ├── auth/            # Authentication routes
-│   │   ├── dashboard/       # Dashboard page
-│   │   ├── invoices/        # Invoice management pages
-│   │   ├── clients/         # Client management pages
-│   │   ├── settings/        # User settings pages
-│   │   ├── sign-in/         # Sign in page
-│   │   ├── sign-up/         # Sign up page
-│   │   ├── layout.tsx       # Root layout
-│   │   └── page.tsx         # Home page
-│   ├── components/          # React components
-│   │   ├── ui/              # Shadcn UI components
-│   │   └── ...              # Custom components
-│   ├── lib/                 # Utility functions
-│   └── utils/               # Helper functions
-│       └── supabase/        # Supabase client utilities
-├── public/                  # Static files
-├── middleware.ts            # Auth middleware
-├── docker-compose.yml       # Docker Compose configuration
-├── Dockerfile              # Docker configuration
-└── ...
-```
-
-## Features
-
-- Authentication with Supabase (email/password, magic links)
-- Dashboard with overview of invoicing activity
-- Create, edit, and send invoices
-- Manage clients and their information
-- Payment processing with Stripe
-- Responsive design for all devices
-- Docker containerization for easy deployment
-
-## Development
-
-### Database Migrations
-
-To manage database changes:
-
-1. Create a new migration:
-   ```bash
-   supabase migration new your_migration_name
-   ```
-
-2. Apply migrations:
-   ```bash
-   supabase db push
-   ```
-
-### Testing
-
-Run the test suite:
+Example:
 ```bash
-npm test
+curl -X POST http://localhost:3000/api/v1/invoices \
+  -H "Authorization: Bearer fk_live_…" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_name": "Ola Nordmann",
+    "client_email": "ola@example.com",
+    "items": [{ "description": "Webdesign", "quantity": 1, "unit_price": 5000, "vat_rate": 25 }],
+    "due_days": 30,
+    "send": true
+  }'
 ```
+
+## Pricing
+
+Bundle packs only — no subscriptions:
+- 5-pack: 49 NOK (9.80/invoice)
+- 10-pack: 89 NOK (8.90/invoice)
+- 25-pack: 199 NOK (7.96/invoice)
+
+New users get 3 free invoices on signup.
 
 ## Deployment
 
-### Docker Deployment
+Dockerfile + `docker-compose.yml` are included. `fly.toml` and `amplify.yml` are also provided. Set all env vars from `.env.example` in your deployment environment, and configure Stripe webhooks to point at `https://your-domain/api/stripe-webhook`.
 
-1. Build the Docker image:
-   ```bash
-   docker build -t fakturia .
-   ```
+## Security notes
 
-2. Run the container:
-   ```bash
-   docker run -p 3001:3001 fakturia
-   ```
-
-### Environment Variables
-
-Make sure to set all required environment variables in your production environment:
-- Supabase configuration
-- Stripe API keys
-- Database connection string
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+See `SECURITY.md` for the RLS / authorization model. CSP and HSTS headers are configured in `next.config.js`.

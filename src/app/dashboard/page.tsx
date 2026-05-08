@@ -18,16 +18,7 @@ const statusColors = {
 };
 
 function handleBuyInvoicePoint() {
-  fetch('/api/create-checkout-session', { method: 'POST' })
-    .then(res => res.json())
-    .then(data => {
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        // handle error
-        alert('Failed to start checkout');
-      }
-    });
+  window.location.href = '/pricing';
 }
 
 export default function DashboardPage() {

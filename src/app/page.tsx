@@ -17,22 +17,22 @@ const benefits = [
   {
     icon: <CreditCard className="w-6 h-6 text-emerald-500" />,
     title: 'Betal per faktura',
-    description: 'Kjøp enkelte fakturaer eller abonner. Ingen binding, ingen overraskelser.',
+    description: 'Kjøp en pakke når du trenger det. Ingen abonnement, ingen binding, ingen overraskelser.',
   },
   {
     icon: <Shield className="w-6 h-6 text-emerald-500" />,
-    title: '100% norsk og sikkert',
-    description: 'Lagring i Norge, integrert med Altinn og EHF. GDPR-kompatibelt.',
+    title: 'Bygget for norske bedrifter',
+    description: 'Norsk MVA-håndtering, fakturanummer og betalingsfrist. EHF/Altinn er på roadmap.',
   },
   {
     icon: <FileText className="w-6 h-6 text-emerald-500" />,
-    title: 'Kraftfull AI-assistent',
-    description: 'Fakturaene dine lages automatisk. Sett opp API og la AI ta seg av fakturering.',
+    title: 'API for automatisering',
+    description: 'Lag fakturaer programmatisk fra ditt eget system eller fra en AI-agent.',
   },
   {
     icon: <Clock className="w-6 h-6 text-emerald-500" />,
-    title: 'Motta betaling raskere',
-    description: 'Med Vipps og BankID er det enkelt for kundene å betale.',
+    title: 'PDF rett til kunden',
+    description: 'Hver faktura sendes som PDF på e-post — ferdig formatert og klar til betaling.',
   },
   {
     icon: <BarChart3 className="w-6 h-6 text-emerald-500" />,
@@ -62,19 +62,19 @@ const steps = [
 const faqs = [
   {
     q: 'Trenger jeg et abonnement?',
-    a: 'Nei! Du kan kjøpe enkeltfakturaer fra 9.80 kr per faktura. Ingen binding, ingen månedlig kostnad.',
+    a: 'Nei. Vi selger ikke abonnementer. Du kjøper en pakke med fakturaer (5, 10 eller 25) og bruker dem når du vil. Pakkene utløper aldri.',
   },
   {
     q: 'Hvordan sender jeg faktura til det offentlige (EHF)?',
-    a: 'Fakturia støtter EHF/Peppol direkte. Du trenger bare bedriftsavtalen din i Altinn.',
+    a: 'EHF/Peppol-støtte er på roadmap. I dag sender vi faktura som PDF på e-post.',
   },
   {
     q: 'Kan jeg bruke API-et?',
-    a: 'Ja! AI API-et er tilgjengelig på Growth- og Enterprise-planene. Send fakturaer automatisk fra ditt eget system.',
+    a: 'Ja. Du kan opprette API-nøkler under Innstillinger og sende fakturaer programmatisk. Hver faktura sendt via API trekker fra én faktura i pakken din.',
   },
   {
     q: 'Er dataene mine trygge?',
-    a: 'Ja. Alle data lagres i Norge, vi er GDPR-kompatible, og all kommunikasjon er kryptert.',
+    a: 'All kommunikasjon er kryptert (HTTPS), passord lagres aldri i klartekst, og hver bruker ser kun sine egne data (Row-Level Security i databasen). Personvernerklæring og databehandleravtale kommer.',
   },
   {
     q: 'Kan jeg prøve gratis?',
@@ -108,13 +108,13 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-slate-900">Fakturia</span>
+            <span className="text-xl font-bold text-slate-900">Fakturio</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/auth/sign-in">
+            <Link href="/sign-in">
               <Button variant="ghost" size="sm">Logg inn</Button>
             </Link>
-            <Link href="/auth/sign-up">
+            <Link href="/sign-up">
               <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">
                 Start gratis
               </Button>
@@ -127,17 +127,17 @@ export default function LandingPage() {
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <Badge variant="outline" className="mb-6 border-emerald-200 text-emerald-700 bg-emerald-50">
-            🌱 Norsk, GDPR-kompatibelt, rimelig
+            🌱 Norsk, enkelt, rimelig
           </Badge>
           <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
             Fakturering uten<br />
             <span className="text-emerald-500">hodebry</span>
           </h1>
           <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
-            Lag og send profesjonelle fakturaer på minutter. Betal per faktura eller abonner — ingen binding, ingen overraskelser. Perfekt for norske småbedrifter.
+            Lag og send profesjonelle fakturaer på minutter. Betal per faktura — ingen abonnement, ingen binding, ingen overraskelser. Perfekt for norske småbedrifter.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/sign-up">
+            <Link href="/sign-up">
               <Button size="lg" className="bg-emerald-500 hover:bg-emerald-600 text-lg px-8 h-14">
                 Start gratis — 3 fakturaer <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
@@ -151,22 +151,24 @@ export default function LandingPage() {
           <p className="mt-4 text-sm text-slate-500">Ingen kredittkort. Ingen binding.</p>
         </div>
 
-        {/* Trust badges */}
-        <div className="max-w-4xl mx-auto mt-16 flex flex-wrap justify-center gap-6 items-center opacity-60">
-          <div className="flex items-center gap-2 text-slate-500 text-sm">
-            <Shield className="w-4 h-4" /> Brønnøysundregistrene
-          </div>
-          <div className="flex items-center gap-2 text-slate-500 text-sm">
-            <Globe className="w-4 h-4" /> Altinn-integrert
-          </div>
-          <div className="flex items-center gap-2 text-slate-500 text-sm">
-            <Lock className="w-4 h-4" /> BankID
-          </div>
-          <div className="flex items-center gap-2 text-slate-500 text-sm">
-            <CreditCard className="w-4 h-4" /> Vipps
-          </div>
-          <div className="flex items-center gap-2 text-slate-500 text-sm">
-            <Lock className="w-4 h-4" /> GDPR-kompatibelt
+        {/* Roadmap — integrasjoner som kommer */}
+        <div className="max-w-4xl mx-auto mt-16">
+          <p className="text-center text-xs uppercase tracking-wider text-slate-400 mb-4">
+            På roadmap — kommer snart
+          </p>
+          <div className="flex flex-wrap justify-center gap-6 items-center opacity-60">
+            <div className="flex items-center gap-2 text-slate-500 text-sm">
+              <Shield className="w-4 h-4" /> Brønnøysundregistrene
+            </div>
+            <div className="flex items-center gap-2 text-slate-500 text-sm">
+              <Globe className="w-4 h-4" /> EHF / Altinn
+            </div>
+            <div className="flex items-center gap-2 text-slate-500 text-sm">
+              <Lock className="w-4 h-4" /> BankID-pålogging
+            </div>
+            <div className="flex items-center gap-2 text-slate-500 text-sm">
+              <CreditCard className="w-4 h-4" /> Vipps
+            </div>
           </div>
         </div>
       </section>
@@ -179,7 +181,7 @@ export default function LandingPage() {
               Alt du trenger — ingenting du ikke trenger
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Fakturia er bygget for norske enkeltpersonforetak og småbedrifter som vil ha fakturering til rett pris.
+              Fakturio er bygget for norske enkeltpersonforetak og småbedrifter som vil ha fakturering til rett pris.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -261,7 +263,7 @@ export default function LandingPage() {
                     <h4 className="font-semibold text-slate-900 mb-2">{pack.name}</h4>
                     <div className="text-4xl font-bold text-slate-900 mb-1">{pack.price} kr</div>
                     <p className="text-sm text-slate-500 mb-4">{pack.per}</p>
-                    <Link href="/auth/sign-up">
+                    <Link href="/sign-up">
                       <Button variant={pack.highlight ? 'default' : 'outline'} className={`w-full ${pack.highlight ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}>
                         Kjøp {pack.name.toLowerCase()}
                       </Button>
@@ -272,40 +274,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <Separator className="my-12" />
-
-          {/* Subscriptions */}
-          <div>
-            <h3 className="text-lg font-semibold text-slate-700 mb-6 text-center">Abonnement — for deg som fakturerer mye</h3>
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { name: 'Starter', price: '199', inv: '50 fakturaer/måned', feat: ['50 fakturaer', 'Alle funksjoner', 'E-post support'], highlight: false },
-                { name: 'Growth', price: '399', inv: 'Ubegrenset + API', feat: ['Ubegrensede fakturaer', 'AI API-tilgang', 'Prioritert support'], highlight: true },
-                { name: 'Enterprise', price: '4 500', inv: 'Ubegrenset + 2 brukere', feat: ['Alt i Growth', '2 brukere', 'Dedikert account manager'], highlight: false },
-              ].map((plan, i) => (
-                <Card key={i} className={`border-2 ${plan.highlight ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
-                  <CardContent className="pt-6 text-center">
-                    {plan.highlight && <Badge className="mb-2 bg-emerald-500">Best verdi</Badge>}
-                    <h4 className="font-semibold text-slate-900 mb-1">{plan.name}</h4>
-                    <p className="text-xs text-slate-500 mb-3">{plan.inv}</p>
-                    <div className="text-4xl font-bold text-slate-900 mb-4">{plan.price} kr<span className="text-lg font-normal text-slate-500">/år</span></div>
-                    <ul className="text-sm text-slate-600 space-y-2 mb-6 text-left">
-                      {plan.feat.map((f, j) => (
-                        <li key={j} className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" /> {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link href="/auth/sign-up">
-                      <Button variant={plan.highlight ? 'default' : 'outline'} className={`w-full ${plan.highlight ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}>
-                        Start {plan.name}
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+          <p className="text-center text-sm text-slate-500 mt-8">
+            Betal per faktura — ingen binding, ingen overraskelser.
+          </p>
         </div>
       </section>
 
@@ -343,7 +314,7 @@ export default function LandingPage() {
           <p className="text-emerald-100 text-lg mb-8">
             Start gratis i dag. 3 fakturaer på huset — ingen binding.
           </p>
-          <Link href="/auth/sign-up">
+          <Link href="/sign-up">
             <Button size="lg" className="bg-white text-emerald-600 hover:bg-emerald-50 text-lg px-10 h-14">
               Opprett konto gratis <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
@@ -358,7 +329,7 @@ export default function LandingPage() {
             <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-slate-900">Fakturia</span>
+            <span className="font-semibold text-slate-900">Fakturio</span>
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-500">
             <a href="#" className="hover:text-slate-900">Personvern</a>
@@ -366,9 +337,7 @@ export default function LandingPage() {
             <a href="#" className="hover:text-slate-900">Kontakt</a>
           </div>
           <div className="flex items-center gap-4 text-slate-400 text-xs">
-            <span>Org. nr. 912 345 678</span>
-            <span className="text-slate-300">|</span>
-            <span>Brønnøysundregistrene</span>
+            <span>© {new Date().getFullYear()} Fakturio</span>
           </div>
         </div>
       </footer>

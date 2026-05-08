@@ -7,7 +7,7 @@ import Navbar from "@/components/navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Fakturia - Fakturagenerering for mikrobedrifter",
+  title: "Fakturio - Fakturagenerering for mikrobedrifter",
   description: "Lag fakturaer på forespørsel, følg opp betalinger og administrer kundene dine – alt på ett sted.",
 };
 
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="nb">
       <body className={inter.className}>
         <div className="min-h-screen bg-background">
           <Navbar />
