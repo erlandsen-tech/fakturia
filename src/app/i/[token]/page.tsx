@@ -38,40 +38,58 @@ interface PublicInvoice {
   items: InvoiceItem[];
 }
 
+interface RpcPayload {
+  invoice: {
+    id: string;
+    invoice_number: string | null;
+    issue_date: string;
+    due_date: string;
+    notes: string | null;
+    bank_account: string | null;
+    kid: string | null;
+    iban: string | null;
+  };
+  client: { name?: string; email?: string; company?: string } | null;
+  items: InvoiceItem[];
+  company: {
+    company_name?: string;
+    address_line1?: string;
+    address_line2?: string | null;
+    city?: string;
+    postal_code?: string;
+    country?: string;
+    organization_number?: string | null;
+    email?: string | null;
+    bank_account?: string | null;
+  } | null;
+}
+
 async function getInvoiceByToken(token: string): Promise<PublicInvoice | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("invoices")
-    .select(
-      `id, invoice_number, issue_date, due_date, notes, user_id,
-       bank_account, kid, iban,
-       client:clients ( name, email, company ),
-       items:invoice_items ( description, quantity, unit_price, vat_rate )`,
-    )
-    .eq("share_token", token)
-    .maybeSingle();
+    .rpc("get_public_invoice_by_token", { p_token: token })
+    .single<RpcPayload>();
   if (error || !data) return null;
 
-  const { data: company } = await supabase
-    .from("company_settings")
-    .select("company_name, address_line1, address_line2, city, postal_code, country, organization_number, email, bank_account")
-    .eq("user_id", data.user_id)
-    .maybeSingle();
+  const { invoice, client, items, company } = data;
 
   const senderAddress = company
-    ? [company.address_line1, company.address_line2, [company.postal_code, company.city].filter(Boolean).join(" "), company.country]
+    ? [
+        company.address_line1,
+        company.address_line2,
+        [company.postal_code, company.city].filter(Boolean).join(" "),
+        company.country,
+      ]
         .filter(Boolean)
         .join("\n")
     : "";
 
-  const client = (data as { client?: { name?: string; email?: string; company?: string } | null }).client ?? null;
-
   return {
-    id: data.id,
-    number: data.invoice_number ?? data.id.slice(0, 8),
-    issue_date: data.issue_date,
-    due_date: data.due_date,
-    note: data.notes ?? null,
+    id: invoice.id,
+    number: invoice.invoice_number ?? invoice.id.slice(0, 8),
+    issue_date: invoice.issue_date,
+    due_date: invoice.due_date,
+    note: invoice.notes ?? null,
     sender_name: company?.company_name ?? "",
     sender_address: senderAddress,
     sender_org_no: company?.organization_number ?? null,
@@ -80,10 +98,10 @@ async function getInvoiceByToken(token: string): Promise<PublicInvoice | null> {
     recipient_company: client?.company ?? null,
     recipient_address: null,
     recipient_email: client?.email ?? null,
-    bank_account: data.bank_account ?? company?.bank_account ?? null,
-    kid: data.kid ?? null,
-    iban: data.iban ?? null,
-    items: (data.items ?? []).map((it: InvoiceItem) => ({
+    bank_account: invoice.bank_account ?? company?.bank_account ?? null,
+    kid: invoice.kid ?? null,
+    iban: invoice.iban ?? null,
+    items: (items ?? []).map((it) => ({
       description: it.description,
       quantity: Number(it.quantity),
       unit_price: Number(it.unit_price),
