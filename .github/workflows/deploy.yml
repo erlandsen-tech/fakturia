@@ -1,0 +1,72 @@
+name: Deploy to production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_BASE_URL: https://fakturio.no
+      NEXT_PUBLIC_SUPABASE_URL: https://xemufotqckljtkqoqbsf.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlbXVmb3RxY2tsanRrcW9xYnNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NjQzMjUsImV4cCI6MjA5MzU0MDMyNX0.BQMPHIf4M30mF9202DMfSq-AHCc3yv_k7R_yyorDHvo
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_51T91lFGczqI2tDLn2iAXYdf0lAk7A9ssakNoruMsyChyxgRF3GY8kPBGbit1m5Rp4FuCEkxeqX8U6ysTPZFQhAsd00F6pdJhFP
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # ----------------------------------------------------------------------
+      # 1. Apply any unpushed Supabase migrations BEFORE deploying app code.
+      #    Forward-only — additive migrations should always be safe; a failure
+      #    here aborts the deploy so the new app code never sees a half-migrated
+      #    schema.
+      # ----------------------------------------------------------------------
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref xemufotqckljtkqoqbsf
+          supabase db push --include-all --yes
+
+      # ----------------------------------------------------------------------
+      # 2. Build + deploy to Fly. --remote-only uses Fly's builders, no local
+      #    Docker needed on the runner.
+      # ----------------------------------------------------------------------
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Fly deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --remote-only
+
+      - name: Smoke test
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" https://fakturio.no/api/health/)
+            echo "Attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 5
+          done
+          echo "Health check never returned 200"
+          exit 1
