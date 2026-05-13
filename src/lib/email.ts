@@ -15,6 +15,7 @@ export interface SendInvoiceEmailInput {
   companyName: string;
   totalLabel: string;
   pdfBuffer: Buffer;
+  ehfXml?: string | null;
 }
 
 export async function sendInvoiceEmail(input: SendInvoiceEmailInput) {
@@ -33,17 +34,25 @@ export async function sendInvoiceEmail(input: SendInvoiceEmailInput) {
     </div>
   `;
 
+  const attachments: Array<{ filename: string; content: Buffer | string }> = [
+    {
+      filename: `${input.invoiceNumber}.pdf`,
+      content: input.pdfBuffer,
+    },
+  ];
+  if (input.ehfXml) {
+    attachments.push({
+      filename: `EHF_${input.invoiceNumber}.xml`,
+      content: input.ehfXml,
+    });
+  }
+
   return getResend().emails.send({
     from,
     to: input.to,
     subject,
     html,
-    attachments: [
-      {
-        filename: `${input.invoiceNumber}.pdf`,
-        content: input.pdfBuffer,
-      },
-    ],
+    attachments,
   });
 }
 

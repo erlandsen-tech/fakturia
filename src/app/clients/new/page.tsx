@@ -18,7 +18,15 @@ export default function NewClientPage() {
     name: '',
     email: '',
     phone: '',
-    company: ''
+    company: '',
+    org_number: '',
+    address_line1: '',
+    address_line2: '',
+    postal_code: '',
+    city: '',
+    country: 'NO',
+    vat_number: '',
+    peppol_endpoint: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,12 +41,13 @@ export default function NewClientPage() {
         return;
       }
 
-      const { error } = await supabase
-        .from('clients')
-        .insert({
-          ...formData,
-          user_id: user.id
-        });
+      // Strip empty strings so optional columns stay NULL instead of ''
+      const payload: Record<string, unknown> = { user_id: user.id };
+      for (const [k, v] of Object.entries(formData)) {
+        if (typeof v === 'string' && v.trim() === '') continue;
+        payload[k] = v;
+      }
+      const { error } = await supabase.from('clients').insert(payload);
 
       if (error) throw error;
 
@@ -100,13 +109,101 @@ export default function NewClientPage() {
 
             <div className="space-y-2">
               <Label htmlFor="phone">{t('Phone')}</Label>
-              <Input 
-                id="phone" 
-                type="tel" 
+              <Input
+                id="phone"
+                type="tel"
                 placeholder={t('Enter phone number')}
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
+            </div>
+
+            <div className="pt-4 border-t">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                {t('EHF / e-invoice')}
+              </h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                {t('Required to generate an EHF e-invoice for this client. Optional otherwise.')}
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="org_number">{t('Organisasjonsnummer')}</Label>
+                  <Input
+                    id="org_number"
+                    placeholder="999888777"
+                    value={formData.org_number}
+                    onChange={(e) => setFormData({ ...formData, org_number: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vat_number">{t('MVA-nummer')}</Label>
+                  <Input
+                    id="vat_number"
+                    placeholder="NO999888777MVA"
+                    value={formData.vat_number}
+                    onChange={(e) => setFormData({ ...formData, vat_number: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="address_line1">{t('Adresse')}</Label>
+                <Input
+                  id="address_line1"
+                  placeholder={t('Gatenavn 1')}
+                  value={formData.address_line1}
+                  onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2 mt-2">
+                <Input
+                  id="address_line2"
+                  placeholder={t('Adresselinje 2 (valgfri)')}
+                  value={formData.address_line2}
+                  onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="postal_code">{t('Postnummer')}</Label>
+                  <Input
+                    id="postal_code"
+                    placeholder="0150"
+                    value={formData.postal_code}
+                    onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">{t('Poststed')}</Label>
+                  <Input
+                    id="city"
+                    placeholder="Oslo"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">{t('Land (ISO-2)')}</Label>
+                  <Input
+                    id="country"
+                    placeholder="NO"
+                    maxLength={2}
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value.toUpperCase() })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="peppol_endpoint">{t('PEPPOL-endepunkt')}</Label>
+                <Input
+                  id="peppol_endpoint"
+                  placeholder="0192:999888777"
+                  value={formData.peppol_endpoint}
+                  onChange={(e) => setFormData({ ...formData, peppol_endpoint: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('Vanligvis "0192:" + organisasjonsnummer for norske mottakere.')}
+                </p>
+              </div>
             </div>
           </div>
 

@@ -33,6 +33,14 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     company: '',
     email: '',
     phone: '',
+    org_number: '',
+    address_line1: '',
+    address_line2: '',
+    postal_code: '',
+    city: '',
+    country: 'NO',
+    vat_number: '',
+    peppol_endpoint: '',
   });
   const [deleting, setDeleting] = useState(false);
 
@@ -68,6 +76,14 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
           company: clientData.company || '',
           email: clientData.email,
           phone: clientData.phone || '',
+          org_number: clientData.org_number || '',
+          address_line1: clientData.address_line1 || '',
+          address_line2: clientData.address_line2 || '',
+          postal_code: clientData.postal_code || '',
+          city: clientData.city || '',
+          country: clientData.country || 'NO',
+          vat_number: clientData.vat_number || '',
+          peppol_endpoint: clientData.peppol_endpoint || '',
         });
 
         // Fetch client's invoices
@@ -101,13 +117,22 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     setSaving(true);
 
     try {
+      const nullIfBlank = (v: string) => (v.trim() === '' ? null : v);
       const { error } = await supabase
         .from('clients')
         .update({
           name: formData.name,
-          company: formData.company || null,
+          company: nullIfBlank(formData.company),
           email: formData.email,
-          phone: formData.phone || null,
+          phone: nullIfBlank(formData.phone),
+          org_number: nullIfBlank(formData.org_number),
+          address_line1: nullIfBlank(formData.address_line1),
+          address_line2: nullIfBlank(formData.address_line2),
+          postal_code: nullIfBlank(formData.postal_code),
+          city: nullIfBlank(formData.city),
+          country: nullIfBlank(formData.country) || 'NO',
+          vat_number: nullIfBlank(formData.vat_number),
+          peppol_endpoint: nullIfBlank(formData.peppol_endpoint),
         })
         .eq('id', client.id);
 
@@ -236,6 +261,88 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder={t('Optional')}
                 />
+              </div>
+
+              <div className="pt-4 border-t mt-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                  {t('EHF / e-invoice')}
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="org_number">{t('Organisasjonsnummer')}</Label>
+                    <Input
+                      id="org_number"
+                      placeholder="999888777"
+                      value={formData.org_number}
+                      onChange={(e) => setFormData({ ...formData, org_number: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="vat_number">{t('MVA-nummer')}</Label>
+                    <Input
+                      id="vat_number"
+                      placeholder="NO999888777MVA"
+                      value={formData.vat_number}
+                      onChange={(e) => setFormData({ ...formData, vat_number: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="address_line1">{t('Adresse')}</Label>
+                    <Input
+                      id="address_line1"
+                      placeholder={t('Gatenavn 1')}
+                      value={formData.address_line1}
+                      onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      id="address_line2"
+                      placeholder={t('Adresselinje 2 (valgfri)')}
+                      value={formData.address_line2}
+                      onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label htmlFor="postal_code">{t('Postnr.')}</Label>
+                      <Input
+                        id="postal_code"
+                        placeholder="0150"
+                        value={formData.postal_code}
+                        onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="city">{t('Poststed')}</Label>
+                      <Input
+                        id="city"
+                        placeholder="Oslo"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="country">{t('Land')}</Label>
+                      <Input
+                        id="country"
+                        placeholder="NO"
+                        maxLength={2}
+                        value={formData.country}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value.toUpperCase() })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="peppol_endpoint">{t('PEPPOL-endepunkt')}</Label>
+                    <Input
+                      id="peppol_endpoint"
+                      placeholder="0192:999888777"
+                      value={formData.peppol_endpoint}
+                      onChange={(e) => setFormData({ ...formData, peppol_endpoint: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

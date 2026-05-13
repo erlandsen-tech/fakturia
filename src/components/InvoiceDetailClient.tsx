@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import type { InvoiceWithDetails, InvoiceStatus } from '@/types/database';
-import { ArrowLeft, Save, Printer, Trash, Send } from 'lucide-react';
+import { ArrowLeft, Save, Printer, Trash, Send, FileCode2 } from 'lucide-react';
 import Link from 'next/link';
 import { t } from '@/lib/i18n';
 import { PDFDownloadLink } from '@react-pdf/renderer';
@@ -24,6 +24,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [ehfLoading, setEhfLoading] = useState(false);
   const [formData, setFormData] = useState({
     issue_date: invoice.issue_date,
     due_date: invoice.due_date,
@@ -146,6 +147,36 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
     }
   };
 
+  const handleDownloadEhf = async () => {
+    setEhfLoading(true);
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}/ehf`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        if (response.status === 422 && Array.isArray(data.missing)) {
+          toast.error(t('Mangler felter for EHF: ') + data.missing.join(', '));
+        } else {
+          toast.error(data.error || t('Failed to generate EHF invoice'));
+        }
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `EHF_${invoice.invoice_number}.xml`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading EHF invoice:', error);
+      toast.error(t('Failed to generate EHF invoice'));
+    } finally {
+      setEhfLoading(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm(t('Are you sure you want to delete this invoice? This action cannot be undone.'))) {
       return;
@@ -247,7 +278,12 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                 )}
               </PDFDownloadLink>
             )}
-            
+
+            <Button variant="outline" onClick={handleDownloadEhf} disabled={ehfLoading}>
+              <FileCode2 className="h-4 w-4 mr-2" />
+              {ehfLoading ? t('Laster ned...') : t('Last ned EHF')}
+            </Button>
+
             {canSendInvoice && (
               <Button 
                 onClick={handleSend} 

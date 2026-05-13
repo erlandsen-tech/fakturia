@@ -48,10 +48,16 @@ export const createClientSchema = z.object({
   name: z.string().min(1).max(200),
   email: z.string().email().optional(),
   phone: z.string().max(50).optional(),
+  company: z.string().max(200).optional(),
+  // EHF / PEPPOL buyer party fields
   org_number: z.string().max(20).optional(),
-  address: z.string().max(500).optional(),
+  address_line1: z.string().max(200).optional(),
+  address_line2: z.string().max(200).optional(),
   postal_code: z.string().max(20).optional(),
   city: z.string().max(100).optional(),
+  country: z.string().length(2).optional(), // ISO 3166-1 alpha-2
+  vat_number: z.string().max(30).optional(),
+  peppol_endpoint: z.string().max(60).optional(),
 });
 
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;

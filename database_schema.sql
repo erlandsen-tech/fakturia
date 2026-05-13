@@ -15,6 +15,15 @@ CREATE TABLE public.clients (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   deleted_at timestamp with time zone,                            -- 003: soft delete
+  -- 005 (EHF): buyer party fields for PEPPOL BIS Billing 3.0
+  org_number text,
+  address_line1 text,
+  address_line2 text,
+  postal_code text,
+  city text,
+  country text DEFAULT 'NO',
+  vat_number text,
+  peppol_endpoint text,                                           -- e.g. "0192:123456789"
   CONSTRAINT clients_pkey PRIMARY KEY (id)
 );
 
@@ -53,6 +62,7 @@ CREATE TABLE public.invoice_items (
   amount numeric NOT NULL,
   vat_rate numeric DEFAULT 25.00,
   vat_amount numeric DEFAULT 0.00,
+  unit_code text NOT NULL DEFAULT 'C62',                          -- 005 (EHF): UN/ECE Rec 20 unit
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT invoice_items_pkey PRIMARY KEY (id),
@@ -75,6 +85,9 @@ CREATE TABLE public.invoices (
   delivery_time timestamp with time zone,
   delivery_place text,
   deleted_at timestamp with time zone,                            -- 003: soft delete
+  currency text NOT NULL DEFAULT 'NOK',                           -- 005 (EHF)
+  buyer_reference text,                                           -- 005 (EHF): cbc:BuyerReference
+  payment_reference text,                                         -- 005 (EHF): KID / cbc:PaymentID
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT invoices_pkey PRIMARY KEY (id),

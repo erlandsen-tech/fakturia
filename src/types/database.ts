@@ -7,6 +7,15 @@ export interface Client {
   phone?: string;
   company?: string;
   user_id: string;
+  // EHF / PEPPOL fields
+  org_number?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  postal_code?: string | null;
+  city?: string | null;
+  country?: string | null;       // ISO 3166-1 alpha-2, default "NO"
+  vat_number?: string | null;
+  peppol_endpoint?: string | null; // e.g. "0192:123456789"
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +42,9 @@ export interface Invoice {
   delivery_time: string | null;
   delivery_place: string | null;
   notes?: string;
+  currency?: string;            // ISO 4217, default "NOK"
+  buyer_reference?: string | null;
+  payment_reference?: string | null; // KID
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +58,7 @@ export interface InvoiceItem {
   amount: number;
   vat_rate: number;
   vat_amount: number;
+  unit_code?: string;           // UN/ECE Rec 20, default "C62" (piece)
   created_at: string;
   updated_at: string;
 }

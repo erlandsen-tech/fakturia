@@ -1,8 +1,11 @@
 -- Public invoice (recipient view) support.
 -- Adds a public share token + payment fields used by /i/[token].
 
+-- gen_random_bytes ships with pgcrypto; on Supabase it lives in `extensions`.
+create extension if not exists pgcrypto with schema extensions;
+
 alter table public.invoices
-  add column if not exists share_token text unique default encode(gen_random_bytes(8), 'hex'),
+  add column if not exists share_token text unique default encode(extensions.gen_random_bytes(8), 'hex'),
   add column if not exists bank_account text,
   add column if not exists kid text,
   add column if not exists iban text;

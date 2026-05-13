@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { updateInvoiceSchema } from '@/lib/validations/invoice';
 import { renderLegacyInvoicePdf } from '@/lib/pdf';
 import { sendInvoiceEmail } from '@/lib/email';
+import { buildEhfInvoice, EhfValidationError } from '@/lib/ehf';
 import type { InvoiceWithDetails } from '@/types/database';
 
 /**
@@ -192,10 +193,10 @@ export async function PATCH(
           },
           client: {
             name: fullInvoice.client.name || '',
-            address: fullInvoice.client.address || '',
+            address: [fullInvoice.client.address_line1, fullInvoice.client.address_line2].filter(Boolean).join(', '),
             postalCode: fullInvoice.client.postal_code || '',
             city: fullInvoice.client.city || '',
-            country: fullInvoice.client.country || 'Norge',
+            country: fullInvoice.client.country || 'NO',
           },
           invoice: {
             number: fullInvoice.invoice_number || params.id.slice(0, 8),
@@ -221,12 +222,69 @@ export async function PATCH(
           },
         });
 
+        // Best-effort EHF XML attachment. Skipped silently if buyer/seller
+        // metadata is incomplete — the PDF still gets sent.
+        let ehfXml: string | null = null;
+        try {
+          ehfXml = buildEhfInvoice({
+            invoice: {
+              invoice_number: fullInvoice.invoice_number,
+              issue_date: fullInvoice.issue_date,
+              due_date: fullInvoice.due_date,
+              currency: fullInvoice.currency || 'NOK',
+              buyer_reference: fullInvoice.buyer_reference,
+              payment_reference: fullInvoice.payment_reference,
+              notes: fullInvoice.notes,
+              lines: (fullInvoice.items || []).map((it: any) => ({
+                description: it.description,
+                quantity: Number(it.quantity),
+                unit_price: Number(it.unit_price),
+                vat_rate: Number(it.vat_rate ?? fullInvoice.vat_rate ?? 25),
+                unit_code: it.unit_code || 'C62',
+              })),
+            },
+            company: {
+              name: company?.company_name,
+              org_number: company?.organization_number,
+              vat_number: company?.vat_number,
+              address_line1: company?.address_line1,
+              address_line2: company?.address_line2,
+              postal_code: company?.postal_code,
+              city: company?.city,
+              country: company?.country,
+              email: company?.email,
+              phone: company?.phone,
+              bank_account: company?.bank_account,
+            },
+            client: {
+              name: fullInvoice.client.name,
+              company: fullInvoice.client.company,
+              org_number: fullInvoice.client.org_number,
+              vat_number: fullInvoice.client.vat_number,
+              address_line1: fullInvoice.client.address_line1,
+              address_line2: fullInvoice.client.address_line2,
+              postal_code: fullInvoice.client.postal_code,
+              city: fullInvoice.client.city,
+              country: fullInvoice.client.country,
+              email: fullInvoice.client.email,
+              phone: fullInvoice.client.phone,
+              peppol_endpoint: fullInvoice.client.peppol_endpoint,
+            },
+          });
+        } catch (ehfErr) {
+          if (!(ehfErr instanceof EhfValidationError)) {
+            console.error('Unexpected EHF generation failure:', ehfErr);
+          }
+          ehfXml = null;
+        }
+
         await sendInvoiceEmail({
           to: clientEmail,
           invoiceNumber: fullInvoice.invoice_number || params.id.slice(0, 8),
           companyName: company?.company_name || 'Mitt firma',
           totalLabel: `${Number(fullInvoice.total_amount || 0).toFixed(2)} NOK`,
           pdfBuffer,
+          ehfXml,
         });
         emailDelivery = { delivered: true };
       } else {
