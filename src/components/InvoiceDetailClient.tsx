@@ -220,14 +220,16 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('Back to Invoices')}
         </Link>
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start">
           <div>
-            <h1 className="text-3xl font-bold">{t('Invoice')} {invoice.invoice_number}</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold break-words">
+              {t('Invoice')} {invoice.invoice_number}
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base">
               {t('Created on')} {new Date(invoice.created_at).toLocaleDateString()}
             </p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             {companySettings && (
               <PDFDownloadLink
                 document={

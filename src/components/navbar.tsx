@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
+import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 import { Wordmark } from '@/components/brand/Wordmark';
@@ -15,6 +16,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const supabase = createClient();
   const [user, setUser] = useState<any>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
@@ -30,6 +32,11 @@ export default function Navbar() {
       listener?.subscription.unsubscribe();
     };
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   // Hide chrome on the marketing landing page and on public invoice pages.
   if (pathname === '/' || pathname?.startsWith('/i/')) return null;
@@ -47,6 +54,21 @@ export default function Navbar() {
         : 'text-ink-3 hover:text-ink',
     );
 
+  const mobileLinkClass = (active: boolean) =>
+    cn(
+      'block px-6 py-3 text-base font-medium transition-colors border-l-2',
+      active
+        ? 'text-ink border-clay bg-paper-2'
+        : 'text-ink-3 border-transparent hover:text-ink hover:bg-paper-2',
+    );
+
+  const navItems: Array<[string, string]> = [
+    ['/dashboard', t('Dashboard')],
+    ['/invoices', t('Invoices')],
+    ['/clients', t('Clients')],
+    ['/settings', t('Settings')],
+  ];
+
   return (
     <header className="border-b border-ink/10 bg-paper/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="container mx-auto py-4 px-6 flex justify-between items-center">
@@ -59,25 +81,35 @@ export default function Navbar() {
         </Link>
         {user && (
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/dashboard" className={navLinkClass(pathname === '/dashboard')}>
-              {t('Dashboard')}
-            </Link>
-            <Link href="/invoices" className={navLinkClass(pathname === '/invoices')}>
-              {t('Invoices')}
-            </Link>
-            <Link href="/clients" className={navLinkClass(pathname === '/clients')}>
-              {t('Clients')}
-            </Link>
-            <Link href="/settings" className={navLinkClass(pathname === '/settings')}>
-              {t('Settings')}
-            </Link>
+            {navItems.map(([href, label]) => (
+              <Link key={href} href={href} className={navLinkClass(pathname === href)}>
+                {label}
+              </Link>
+            ))}
           </nav>
         )}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2">
           {user ? (
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              {t('Sign Out')}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="hidden md:inline-flex"
+              >
+                {t('Sign Out')}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setMobileOpen((v) => !v)}
+                className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-sm text-ink hover:bg-ink/[.04]"
+                aria-label={mobileOpen ? t('Close menu') : t('Open menu')}
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+              >
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </>
           ) : (
             <Link href="/sign-in">
               <Button variant="outline" size="sm">{t('Sign In')}</Button>
@@ -85,6 +117,33 @@ export default function Navbar() {
           )}
         </div>
       </div>
+
+      {user && mobileOpen && (
+        <nav
+          id="mobile-nav"
+          className="md:hidden border-t border-ink/10 bg-paper"
+        >
+          {navItems.map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              className={mobileLinkClass(pathname === href)}
+            >
+              {label}
+            </Link>
+          ))}
+          <div className="px-6 py-3 border-t border-ink/10">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSignOut}
+              className="w-full"
+            >
+              {t('Sign Out')}
+            </Button>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }
