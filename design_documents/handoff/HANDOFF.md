@@ -29,6 +29,7 @@ Read chapters in order. Each chapter ends with a **commit message** Claude Code 
 | 08 | [08-pdf-email.md](./08-pdf-email.md) | `InvoicePDF.tsx` restyle + transactional email template |
 | 09 | [09-i18n-navbar.md](./09-i18n-navbar.md) | i18n keys (nb + en), navbar update |
 | 10 | [10-qa.md](./10-qa.md) | QA checklist + visual regression notes |
+| 11 | [11-ehf-einvoice.md](./11-ehf-einvoice.md) | EHF 3.0 / PEPPOL BIS Billing 3.0 XML export (shipped 2026-05-13) |
 
 ## Dependencies to add
 

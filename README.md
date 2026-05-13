@@ -1,6 +1,6 @@
 # Fakturio
 
-Fakturering for norske enkeltpersonforetak og småbedrifter. Kjøp pakker med fakturaer (5/10/25), send dem som PDF på e-post, eller automatiser via API. Ingen abonnement.
+Fakturering for norske enkeltpersonforetak og småbedrifter. Kjøp pakker med fakturaer (5/10/25), send dem som PDF på e-post eller som EHF 3.0 (PEPPOL BIS Billing 3.0) XML, eller automatiser via API. Ingen abonnement.
 
 ## Stack
 
