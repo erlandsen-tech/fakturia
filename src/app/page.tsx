@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { Mark } from "@/components/brand/Mark";
 import {
   ReceiptBird,
   CitrusCalc,
@@ -13,6 +14,31 @@ import { t } from "@/lib/i18n.server";
 export default function LandingPage() {
   return (
     <div className="bg-paper-grain text-ink">
+      {/* TOP BAR — logo + sign-in entry point */}
+      <header className="border-b border-ink/10 bg-paper/80 backdrop-blur-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto py-4 px-6 lg:px-12 flex justify-between items-center">
+          <Link
+            href="/"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
+            <Mark size={28} />
+            <Wordmark size={0.7} />
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/sign-in">
+              <Button variant="outline" size="sm">
+                {t("Sign In")}
+              </Button>
+            </Link>
+            <Link href="/sign-up" className="hidden sm:inline-flex">
+              <Button variant="clay" size="sm">
+                {t("Get Started")}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
       {/* HERO */}
       <section className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-12 px-6 lg:px-12 pt-16 pb-24 max-w-7xl mx-auto items-center">
         <div>

@@ -75,19 +75,19 @@ export default function DashboardPage() {
   const firstName = user?.user_metadata?.first_name ?? user?.email?.split('@')[0] ?? 'der';
 
   return (
-    <div className="bg-paper-grain min-h-screen px-6 lg:px-10 py-8">
+    <div className="bg-paper-grain min-h-screen px-4 sm:px-6 lg:px-10 py-8">
       <div className="max-w-7xl mx-auto">
         {/* HEADER */}
-        <div className="flex justify-between items-start mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-8">
           <div>
             <div className="cap text-ink-mute mb-1.5">
               {fmtDate(new Date().toISOString()).slice(3)}
             </div>
-            <h1 className="font-display text-[36px] md:text-[44px] m-0 tracking-[-0.02em]">
+            <h1 className="font-display text-[32px] sm:text-[36px] md:text-[44px] m-0 tracking-[-0.02em]">
               {greeting}, <em>{firstName}</em>.
             </h1>
           </div>
-          <Link href="/invoices/create">
+          <Link href="/invoices/create" className="self-start sm:self-auto">
             <Button variant="clay" size="default">+ Ny faktura</Button>
           </Link>
         </div>
@@ -146,7 +146,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="border-t border-ink">
-          <div className="grid grid-cols-[100px_1fr_120px_90px_110px_24px] py-2.5 cap text-ink-mute border-b border-ink/12">
+          <div className="hidden md:grid grid-cols-[100px_1fr_120px_90px_110px_24px] py-2.5 cap text-ink-mute border-b border-ink/12">
             <div>Nummer</div>
             <div>Kunde</div>
             <div className="text-right">Beløp</div>
@@ -163,20 +163,38 @@ export default function DashboardPage() {
               <Link
                 href={`/invoices/${inv.id}`}
                 key={inv.id}
-                className="grid grid-cols-[100px_1fr_120px_90px_110px_24px] py-4 border-b border-ink/8 items-center hover:bg-paper-2 transition-colors"
+                className="block md:grid md:grid-cols-[100px_1fr_120px_90px_110px_24px] py-4 border-b border-ink/8 md:items-center hover:bg-paper-2 transition-colors"
               >
-                <div className="font-mono text-[13px] text-ink-3">{inv.invoice_number ?? '—'}</div>
-                <div className="text-[15px]">{inv.client?.name ?? '—'}</div>
-                <div className="font-mono text-right text-sm">
+                {/* Mobile card layout */}
+                <div className="md:hidden flex flex-col gap-1.5">
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="text-[15px] font-medium">{inv.client?.name ?? '—'}</div>
+                    <StatusPill status={inv.status} />
+                  </div>
+                  <div className="flex justify-between items-baseline gap-3 text-[13px] text-ink-3">
+                    <span className="font-mono">{inv.invoice_number ?? '—'}</span>
+                    <span className="font-mono">
+                      kr {fmtKr(Number(inv.total_amount ?? 0), false)}
+                    </span>
+                  </div>
+                  <div className="font-mono text-[12px] text-ink-mute">
+                    {inv.due_date ? `Forfall ${fmtDate(inv.due_date).slice(0, 5)}` : '—'}
+                  </div>
+                </div>
+
+                {/* Desktop grid cells */}
+                <div className="hidden md:block font-mono text-[13px] text-ink-3">{inv.invoice_number ?? '—'}</div>
+                <div className="hidden md:block text-[15px]">{inv.client?.name ?? '—'}</div>
+                <div className="hidden md:block font-mono text-right text-sm">
                   kr {fmtKr(Number(inv.total_amount ?? 0), false)}
                 </div>
-                <div className="font-mono text-right text-[13px] text-ink-3">
+                <div className="hidden md:block font-mono text-right text-[13px] text-ink-3">
                   {inv.due_date ? fmtDate(inv.due_date).slice(0, 5) : '—'}
                 </div>
-                <div className="text-right">
+                <div className="hidden md:block text-right">
                   <StatusPill status={inv.status} />
                 </div>
-                <div className="text-right text-ink-mute">›</div>
+                <div className="hidden md:block text-right text-ink-mute">›</div>
               </Link>
             ))
           )}
