@@ -5,6 +5,8 @@ const dict: Record<Locale, Record<string, string>> = {
     // Auth / nav
     "Sign In":  "Logg inn",
     "Sign Out": "Logg ut",
+    "Open menu": "Åpne meny",
+    "Close menu": "Lukk meny",
     "Get Started": "Kom i gang",
     "Start for Free": "Start gratis",
     "Learn More": "Lær mer",
@@ -249,6 +251,8 @@ const dict: Record<Locale, Record<string, string>> = {
   en: {
     "Sign In":  "Sign in",
     "Sign Out": "Sign out",
+    "Open menu": "Open menu",
+    "Close menu": "Close menu",
     "Dashboard": "Dashboard",
     "Invoices": "Invoices",
     "Clients":  "Clients",
