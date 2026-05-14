@@ -59,7 +59,7 @@ export default function PricingPage() {
         <div className="text-center mb-12">
           <Link href="/" className="text-sm text-slate-500 hover:text-slate-900">← Tilbake</Link>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mt-4 mb-4">
-            Enkel pris — ingen binding
+            Enkel pris, ingen binding
           </h1>
           <p className="text-lg text-slate-600">
             Kjøp fakturaer når du trenger dem, eller abonner for ubegrenset.
@@ -90,7 +90,7 @@ export default function PricingPage() {
         </section>
 
         <p className="text-center text-sm text-slate-500 mt-12">
-          Betal per faktura — ingen abonnement, ingen binding. Alle priser er eks. mva.
+          Betal per faktura. Ingen abonnement, ingen binding. Alle priser er eks. mva.
           <br />
           Kvittering sendes automatisk til e-posten din etter betaling.
         </p>

@@ -29,7 +29,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fakturio — fakturering for folk som heller vil gjøre noe annet",
+  title: "Fakturio · fakturering for folk som heller vil gjøre noe annet",
   description:
     "Et fakturaverktøy for norske enkeltpersonforetak. Vennlig, varmt, og gjort på 60 sekunder.",
 };

@@ -3,7 +3,6 @@ import { createClient } from "@/utils/supabase/server";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { Mark } from "@/components/brand/Mark";
 import { InkwellTide } from "@/components/brand/illustrations";
-import { Button } from "@/components/ui/button";
 import { fmtKr, fmtDate } from "@/lib/format";
 
 interface PageProps {
@@ -130,7 +129,7 @@ export default async function PublicInvoicePage({ params }: PageProps) {
           <Mark size={32} />
           <Wordmark size={0.8} />
         </div>
-        <div className="cap text-ink-mute">Sikker betaling · Vipps & Kort</div>
+        <div className="cap text-ink-mute">Betal med bankoverføring</div>
       </header>
 
       {/* HERO */}
@@ -144,7 +143,7 @@ export default async function PublicInvoicePage({ params }: PageProps) {
             <em>{inv.sender_name || "Avsenderen"}</em> har sendt deg en faktura.
           </h1>
           <p className="text-[15px] text-ink-2 mt-4 leading-[1.6] max-w-[480px]">
-            Det meste tar to klikk. Du kan betale med Vipps eller kort, laste ned PDF, eller be om en kopi på e-post. Ingen registrering, ingen konto.
+            Betalingsdetaljene finner du til høyre. Bruk KID-nummeret når du betaler, så blir fakturaen registrert automatisk.
           </p>
           <div className="flex flex-wrap gap-9 mt-8 mb-8">
             <div>
@@ -156,23 +155,6 @@ export default async function PublicInvoicePage({ params }: PageProps) {
               <div className="font-display text-[32px]">{fmtDate(inv.due_date, "long")}</div>
               <div className="text-xs text-ink-3 mt-0.5">{daysFromNow(inv.due_date)}</div>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <form action={`/api/pay/${params.token}/vipps`} method="post">
-              <Button variant="clay" size="lg" type="submit">
-                Betal med Vipps →
-              </Button>
-            </form>
-            <form action={`/api/pay/${params.token}/card`} method="post">
-              <Button variant="outline" size="lg" type="submit">
-                Betal med kort
-              </Button>
-            </form>
-            <a href={`/api/invoice/${params.token}/pdf`} download>
-              <Button variant="outline" size="lg" type="button">
-                Last ned PDF
-              </Button>
-            </a>
           </div>
         </div>
       </section>

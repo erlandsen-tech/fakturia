@@ -28,18 +28,20 @@ export default function LandingPage() {
           <div className="flex flex-wrap gap-3.5 mt-9">
             <Link href="/sign-up">
               <Button variant="clay" size="lg">
-                {t("landing.ctaPrimary")} →
+                {t("landing.ctaPrimary")}
               </Button>
             </Link>
-            <Button variant="outline" size="lg">
-              {t("landing.ctaSecondary")}
-            </Button>
+            <Link href="/pricing">
+              <Button variant="outline" size="lg">
+                {t("landing.ctaSecondary")}
+              </Button>
+            </Link>
           </div>
           <ul className="flex flex-wrap gap-7 mt-9 text-xs text-ink-3 list-none p-0">
-            <li>★ Vipps & kort</li>
-            <li>★ EHF / Peppol</li>
-            <li>★ MCP for AI-agenter</li>
-            <li>★ Norsk drift</li>
+            <li>★ {t("landing.heroBullet1")}</li>
+            <li>★ {t("landing.heroBullet2")}</li>
+            <li>★ {t("landing.heroBullet3")}</li>
+            <li>★ {t("landing.heroBullet4")}</li>
           </ul>
         </div>
         <div className="relative h-[480px] hidden lg:block">
@@ -88,23 +90,16 @@ export default function LandingPage() {
         ))}
       </section>
 
-      {/* MCP / AI BAND */}
+      {/* EHF / PEPPOL */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 px-6 lg:px-12 py-20 items-center max-w-7xl mx-auto">
         <div>
-          <div className="cap text-clay mb-4">{t("landing.mcpEyebrow")}</div>
+          <div className="cap text-clay mb-4">{t("landing.ehfEyebrow")}</div>
           <h2 className="font-display text-[40px] md:text-[56px] leading-[1.05] tracking-[-0.02em] m-0">
-            {t("landing.mcpQuote")}
+            {t("landing.ehfQuote")}
           </h2>
           <p className="text-base text-ink-2 mt-5 leading-[1.6] max-w-[520px]">
-            {t("landing.mcpBody")}
+            {t("landing.ehfBody")}
           </p>
-          <pre className="mt-7 p-5 bg-ink text-paper font-mono text-[12px] leading-[1.7] rounded-sm overflow-auto">
-{`$ claude mcp add fakturio
-› Connected. 3 tools available:
-›   • create_invoice
-›   • list_clients
-›   • mark_paid`}
-          </pre>
         </div>
         <div className="flex justify-center">
           <StampMoth size={400} />
@@ -123,25 +118,25 @@ export default function LandingPage() {
           {[
             {
               name: t("pricing.tier1"),
-              price: "9",
+              price: "49",
               unit: t("pricing.unit1"),
               note: t("pricing.note1"),
               btn: t("pricing.btn1"),
             },
             {
               name: t("pricing.tier2"),
-              price: "199",
+              price: "89",
               unit: t("pricing.unit2"),
               note: t("pricing.note2"),
               btn: t("pricing.btn2"),
-              best: true,
             },
             {
               name: t("pricing.tier3"),
-              price: "399",
+              price: "199",
               unit: t("pricing.unit3"),
               note: t("pricing.note3"),
               btn: t("pricing.btn3"),
+              best: true,
             },
           ].map((p) => (
             <div
@@ -173,16 +168,21 @@ export default function LandingPage() {
               >
                 {p.note}
               </p>
-              <Button
-                variant={p.best ? "clay" : "default"}
-                size="default"
-                className="mt-5 w-full"
-              >
-                {p.btn}
-              </Button>
+              <Link href="/pricing">
+                <Button
+                  variant={p.best ? "clay" : "default"}
+                  size="default"
+                  className="mt-5 w-full"
+                >
+                  {p.btn}
+                </Button>
+              </Link>
             </div>
           ))}
         </div>
+        <p className="text-center text-sm text-ink-3 mt-10">
+          {t("pricing.freeNote")}
+        </p>
       </section>
 
       {/* FOOTER */}
@@ -191,10 +191,7 @@ export default function LandingPage() {
           <Wordmark size={1.4} inverted />
           <div className="mt-3 text-xs">{t("footer.tagline")}</div>
         </div>
-        <div className="text-xs flex flex-wrap gap-8">
-          <Link href="/privacy">{t("footer.privacy")}</Link>
-          <Link href="/terms">{t("footer.terms")}</Link>
-          <Link href="/status">{t("footer.status")}</Link>
+        <div className="text-xs">
           <span>Org.nr 925 100 200</span>
         </div>
       </footer>

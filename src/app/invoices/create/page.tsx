@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import type { Client, InvoiceStatus, Profile } from '@/types/database';
 import { t } from '@/lib/i18n';
 import { Wordmark } from '@/components/brand/Wordmark';
-import { AIAssistCard } from '@/components/invoices/AIAssistCard';
 import { ChecksCard } from '@/components/invoices/ChecksCard';
 
 interface InvoiceItem {
@@ -616,12 +615,11 @@ export default function CreateInvoicePage() {
       </div>
           </div>
 
-          {/* AI ASSIST SIDEBAR */}
+          {/* SIDEBAR */}
           <aside className="flex flex-col gap-5">
-            <AIAssistCard onApply={() => { /* AI-side patching is wired up in a follow-up; keep no-op for now. */ }} />
             <ChecksCard items={preflight} />
             <p className="px-4 text-xs text-ink-3 leading-[1.6] border-t border-ink/10 pt-4">
-              Når du trykker <strong>Send</strong> får mottakeren en e-post med en lenke. De kan betale med Vipps eller kort. Du får varsel når de åpner og når de betaler.
+              Når du trykker <strong>Send</strong> får mottakeren en e-post med fakturaen som PDF og en lenke til en lesbar versjon med bankkonto og KID.
             </p>
           </aside>
         </div>
