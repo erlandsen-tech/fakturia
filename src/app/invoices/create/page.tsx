@@ -258,16 +258,16 @@ export default function CreateInvoicePage() {
   ];
 
   return (
-    <div className="bg-paper-grain min-h-screen px-6 lg:px-12 py-8">
+    <div className="bg-paper-grain min-h-screen px-4 sm:px-6 lg:px-12 py-8">
       <div className="max-w-7xl mx-auto">
         {/* TOP BAR */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6">
           <div className="flex items-center gap-3 text-ink-3">
             <Link href="/invoices" className="hover:text-ink">← Fakturaer</Link>
             <span>·</span>
             <span className="font-display text-[22px] text-ink">Ny faktura</span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" type="button" onClick={() => saveInvoice('draft')} disabled={loading}>
               <Save className="h-4 w-4 mr-2" />
               {t('Save as Draft')}
@@ -281,8 +281,8 @@ export default function CreateInvoicePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
           {/* PAPER CARD with the form */}
-          <div className="bg-white px-10 lg:px-14 py-12 shadow-paper border border-ink/8">
-            <div className="flex justify-between mb-9">
+          <div className="bg-white px-5 sm:px-10 lg:px-14 py-8 sm:py-12 shadow-paper border border-ink/8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between mb-9">
               <div>
                 <Wordmark size={0.9} />
                 {companySettings && (
@@ -314,23 +314,23 @@ export default function CreateInvoicePage() {
           </div>
         ) : !hasEnoughPoints() ? (
           <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-semibold text-red-900">
                     {t('Insufficient Invoice Points')}
                   </h3>
                   <p className="text-sm text-red-700">
-                    {t('You need at least 1 invoice point to create an invoice.')} 
+                    {t('You need at least 1 invoice point to create an invoice.')}
                     {' '}
                     {t('Available Points')}: {profile?.invoice_points || 0}
                   </p>
                 </div>
               </div>
-              <Button 
+              <Button
                 onClick={handleBuyInvoicePoints}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto shrink-0"
               >
                 {t('Buy Invoice Points')}
               </Button>
@@ -355,7 +355,7 @@ export default function CreateInvoicePage() {
 
       <div className="space-y-8">
         {/* Invoice Details */}
-        <div className="bg-card p-6 rounded-lg border">
+        <div className="bg-card p-4 sm:p-6 rounded-lg border">
           <h2 className="text-xl font-semibold mb-4">{t('Invoice Details')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -472,8 +472,8 @@ export default function CreateInvoicePage() {
         </div>
 
         {/* Invoice Items */}
-        <div className="bg-card p-6 rounded-lg border">
-          <div className="flex justify-between items-center mb-4">
+        <div className="bg-card p-4 sm:p-6 rounded-lg border">
+          <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
             <h2 className="text-xl font-semibold">{t('Invoice Items')}</h2>
             <Button onClick={addItem} variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" />
@@ -483,8 +483,11 @@ export default function CreateInvoicePage() {
 
           <div className="space-y-4">
             {items.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 gap-4 items-end">
-                <div className="col-span-4">
+              <div
+                key={index}
+                className="grid grid-cols-2 sm:grid-cols-12 gap-3 sm:gap-4 sm:items-end border border-ink/10 rounded-lg p-3 sm:border-0 sm:rounded-none sm:p-0"
+              >
+                <div className="col-span-2 sm:col-span-4">
                   <Label>{t('Description')} *</Label>
                   <Input
                     placeholder={t('Item description')}
@@ -493,7 +496,7 @@ export default function CreateInvoicePage() {
                   />
                 </div>
 
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <Label>{t('Quantity')}</Label>
                   <Input
                     type="number"
@@ -503,7 +506,7 @@ export default function CreateInvoicePage() {
                   />
                 </div>
 
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <Label>{t('Unit Price')}</Label>
                   <Input
                     type="number"
@@ -514,7 +517,7 @@ export default function CreateInvoicePage() {
                   />
                 </div>
 
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <Label>{t('VAT Rate (%)')}</Label>
                   <Input
                     type="number"
@@ -526,14 +529,16 @@ export default function CreateInvoicePage() {
                   />
                 </div>
 
-                <div className="col-span-1">
+                <div className="col-span-1 sm:col-span-2 flex items-end">
                   <Button
                     onClick={() => removeItem(index)}
                     variant="outline"
                     size="sm"
                     disabled={items.length === 1}
+                    className="w-full sm:w-auto"
                   >
                     <Trash2 className="h-4 w-4" />
+                    <span className="sm:hidden ml-2">{t('Delete')}</span>
                   </Button>
                 </div>
               </div>
@@ -559,7 +564,7 @@ export default function CreateInvoicePage() {
 
         {/* Company Information */}
         {companySettings && (
-          <div className="bg-card p-6 rounded-lg border">
+          <div className="bg-card p-4 sm:p-6 rounded-lg border">
             <h2 className="text-xl font-semibold mb-4">{t('Company Information')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
