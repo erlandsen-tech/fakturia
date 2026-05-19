@@ -181,14 +181,14 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold">{t('Company Settings')}</h1>
             <p className="text-muted-foreground">
               {t('Configure your company information for invoices')}
             </p>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="self-start sm:self-auto">
             <a href="/settings/api-keys">API-nøkler</a>
           </Button>
         </div>

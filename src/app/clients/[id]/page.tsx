@@ -187,14 +187,14 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('Back to Clients')}
         </Link>
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start">
           <div>
             <h1 className="text-3xl font-bold">{client.name}</h1>
             {client.company && (
               <p className="text-muted-foreground">{client.company}</p>
             )}
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-2 md:gap-4">
             <Link href={`/invoices/create?client_id=${client.id}`}>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -303,7 +303,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                       onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
                     />
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div>
                       <Label htmlFor="postal_code">{t('Postnr.')}</Label>
                       <Input

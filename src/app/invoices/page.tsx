@@ -81,12 +81,12 @@ export default function InvoicesPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">{t('Invoices')}</h1>
           <p className="text-muted-foreground">{t('Manage your invoices and track payments')}</p>
         </div>
-        <Link href="/invoices/create">
+        <Link href="/invoices/create" className="self-start sm:self-auto">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             {t('Create Invoice')}
@@ -105,7 +105,46 @@ export default function InvoicesPage() {
         </div>
       ) : (
         <div className="bg-card rounded-lg border overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile card list */}
+          <div className="sm:hidden divide-y">
+            {invoices.map((invoice) => (
+              <div key={invoice.id} className="p-4 hover:bg-gray-50">
+                <div className="flex justify-between items-start gap-3">
+                  <Link
+                    href={`/invoices/${invoice.id}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {invoice.invoice_number}
+                  </Link>
+                  <Badge className={statusColors[invoice.status]}>
+                    {t(invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1))}
+                  </Badge>
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">{invoice.client.name}</div>
+                <div className="flex justify-between items-end gap-3 mt-2">
+                  <div className="text-xs text-muted-foreground">
+                    {t('Due Date')}: {new Date(invoice.due_date).toLocaleDateString()}
+                  </div>
+                  <div className="font-mono text-sm">{invoice.total_amount.toFixed(2)}</div>
+                </div>
+                <div className="mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleClone(invoice.id)}
+                    disabled={cloningId === invoice.id}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    {t('Kopier som ny kladd')}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">

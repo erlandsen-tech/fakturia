@@ -125,12 +125,12 @@ export default async function PublicInvoicePage({ params }: PageProps) {
   return (
     <div className="bg-paper-grain text-ink min-h-screen">
       {/* TOP BAR */}
-      <header className="flex justify-between items-center px-6 md:px-10 py-5 border-b border-ink/10">
+      <header className="flex justify-between items-center px-4 sm:px-6 md:px-10 py-5 border-b border-ink/10">
         <div className="flex items-center gap-3">
           <Mark size={32} />
           <Wordmark size={0.8} />
         </div>
-        <div className="cap text-ink-mute">Sikker betaling · Vipps & Kort</div>
+        <div className="cap text-ink-mute hidden sm:block">Sikker betaling · Vipps & Kort</div>
       </header>
 
       {/* HERO */}
@@ -138,9 +138,9 @@ export default async function PublicInvoicePage({ params }: PageProps) {
         <div className="hidden lg:flex justify-center items-center p-12 border-r border-ink/10">
           <InkwellTide size={340} />
         </div>
-        <div className="px-8 md:px-14 py-12 md:py-14">
+        <div className="px-5 sm:px-8 md:px-14 py-12 md:py-14">
           <div className="cap text-ink-mute mb-3">Faktura · No. {inv.number}</div>
-          <h1 className="font-display text-[36px] md:text-[56px] leading-[1.05] tracking-[-0.02em] m-0">
+          <h1 className="font-display text-[32px] sm:text-[36px] md:text-[56px] leading-[1.05] tracking-[-0.02em] m-0">
             <em>{inv.sender_name || "Avsenderen"}</em> har sendt deg en faktura.
           </h1>
           <p className="text-[15px] text-ink-2 mt-4 leading-[1.6] max-w-[480px]">
@@ -157,19 +157,19 @@ export default async function PublicInvoicePage({ params }: PageProps) {
               <div className="text-xs text-ink-3 mt-0.5">{daysFromNow(inv.due_date)}</div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <form action={`/api/pay/${params.token}/vipps`} method="post">
-              <Button variant="clay" size="lg" type="submit">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            <form action={`/api/pay/${params.token}/vipps`} method="post" className="w-full sm:w-auto">
+              <Button variant="clay" size="lg" type="submit" className="w-full sm:w-auto">
                 Betal med Vipps →
               </Button>
             </form>
-            <form action={`/api/pay/${params.token}/card`} method="post">
-              <Button variant="outline" size="lg" type="submit">
+            <form action={`/api/pay/${params.token}/card`} method="post" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" type="submit" className="w-full sm:w-auto">
                 Betal med kort
               </Button>
             </form>
-            <a href={`/api/invoice/${params.token}/pdf`} download>
-              <Button variant="outline" size="lg" type="button">
+            <a href={`/api/invoice/${params.token}/pdf`} download className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" type="button" className="w-full sm:w-auto">
                 Last ned PDF
               </Button>
             </a>
@@ -178,7 +178,7 @@ export default async function PublicInvoicePage({ params }: PageProps) {
       </section>
 
       {/* DETAIL BODY */}
-      <section className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12 px-6 md:px-10 py-14 max-w-6xl mx-auto">
+      <section className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 lg:gap-12 px-4 sm:px-6 md:px-10 py-14 max-w-6xl mx-auto">
         <div>
           {/* PARTIES */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
@@ -205,7 +205,7 @@ export default async function PublicInvoicePage({ params }: PageProps) {
           {/* LINES */}
           <div className="cap text-ink-mute mb-3.5">Linjer</div>
           <div className="border-t border-ink">
-            <div className="grid grid-cols-[1fr_60px_100px_120px] py-2.5 cap text-ink-mute border-b border-ink/12">
+            <div className="hidden sm:grid grid-cols-[1fr_60px_100px_120px] py-2.5 cap text-ink-mute border-b border-ink/12">
               <div>Beskrivelse</div>
               <div className="text-right">Antall</div>
               <div className="text-right">Á pris</div>
@@ -214,16 +214,30 @@ export default async function PublicInvoicePage({ params }: PageProps) {
             {inv.items.map((it, i) => (
               <div
                 key={i}
-                className="grid grid-cols-[1fr_60px_100px_120px] py-4 border-b border-ink/8 items-baseline"
+                className="block sm:grid sm:grid-cols-[1fr_60px_100px_120px] py-4 border-b border-ink/8 sm:items-baseline"
               >
-                <div className="text-[15px]">{it.description}</div>
-                <div className="font-mono text-right text-sm text-ink-2">
+                {/* Mobile card layout */}
+                <div className="sm:hidden flex flex-col gap-1">
+                  <div className="flex justify-between items-start gap-3">
+                    <span className="text-[15px]">{it.description}</span>
+                    <span className="font-mono text-[15px] shrink-0">
+                      {fmtKr(it.quantity * it.unit_price, false)}
+                    </span>
+                  </div>
+                  <div className="font-mono text-[13px] text-ink-3">
+                    {it.quantity} {it.unit} × {fmtKr(it.unit_price, false)}
+                  </div>
+                </div>
+
+                {/* Desktop grid cells */}
+                <div className="hidden sm:block text-[15px]">{it.description}</div>
+                <div className="hidden sm:block font-mono text-right text-sm text-ink-2">
                   {it.quantity} {it.unit}
                 </div>
-                <div className="font-mono text-right text-sm text-ink-2">
+                <div className="hidden sm:block font-mono text-right text-sm text-ink-2">
                   {fmtKr(it.unit_price, false)}
                 </div>
-                <div className="font-mono text-right text-[15px]">
+                <div className="hidden sm:block font-mono text-right text-[15px]">
                   {fmtKr(it.quantity * it.unit_price, false)}
                 </div>
               </div>
@@ -232,7 +246,7 @@ export default async function PublicInvoicePage({ params }: PageProps) {
 
           {/* TOTALS */}
           <div className="flex justify-end mt-6">
-            <div className="min-w-[320px]">
+            <div className="w-full sm:w-auto sm:min-w-[320px]">
               <Row label="Sum eks. mva" value={fmtKr(subtotal, false)} />
               <Row label="MVA 25%" value={fmtKr(vat, false)} />
               <div className="flex justify-between pt-4 border-t border-ink mt-1.5">
@@ -267,11 +281,11 @@ export default async function PublicInvoicePage({ params }: PageProps) {
         </aside>
       </section>
 
-      <footer className="flex justify-between items-center px-6 md:px-10 py-6 border-t border-ink/10 bg-paper-2">
+      <footer className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center px-4 sm:px-6 md:px-10 py-6 border-t border-ink/10 bg-paper-2">
         <div className="flex items-center gap-2.5 text-xs text-ink-3">
           <Mark size={20} /> Sendt med Fakturio · Trygt og bokført
         </div>
-        <div className="font-mono text-[11px] text-ink-mute">
+        <div className="font-mono text-[11px] text-ink-mute break-all">
           fakturio.no/i/{params.token}
         </div>
       </footer>

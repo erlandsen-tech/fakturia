@@ -62,7 +62,7 @@ export default function NewClientPage() {
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">{t('Add New Client')}</h1>
@@ -73,7 +73,7 @@ export default function NewClientPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="company">{t('Company Name')}</Label>
                 <Input 
@@ -125,7 +125,7 @@ export default function NewClientPage() {
               <p className="text-xs text-muted-foreground mb-4">
                 {t('Required to generate an EHF e-invoice for this client. Optional otherwise.')}
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="org_number">{t('Organisasjonsnummer')}</Label>
                   <Input
@@ -162,7 +162,7 @@ export default function NewClientPage() {
                   onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                 <div className="space-y-2">
                   <Label htmlFor="postal_code">{t('Postnummer')}</Label>
                   <Input
