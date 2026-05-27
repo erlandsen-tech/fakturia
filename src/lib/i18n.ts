@@ -29,7 +29,7 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.heroBullet1":       "3 fakturaer gratis",
     "landing.heroBullet2":       "PDF + EHF / PEPPOL",
     "landing.heroBullet3":       "Norsk MVA-håndtering",
-    "landing.heroBullet4":       "Laget i Trondheim",
+    "landing.heroBullet4":       "Laget på Nesodden",
 
     "landing.manifestoEyebrow":  "Manifest",
     "landing.manifestoA":        "Du er en frilanser, ikke en regnskapsfører.",
@@ -43,10 +43,10 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.value3Title":       "EHF inkludert",
     "landing.value3Body":        "Last ned EHF 3.0 XML fra hver faktura, validert mot PEPPOL BIS Billing 3.0. Klar for offentlige innkjøp og store kunder.",
 
-    "landing.ehfEyebrow":        "Nytt · EHF 3.0 / PEPPOL",
-    "landing.ehfQuote":          "PEPPOL-klar XML på ett klikk.",
+    "landing.ehfEyebrow":        "Snart · BankID, Vipps, EHF-utsending",
+    "landing.ehfQuote":          "PDF og EHF-XML i dag. Resten kommer.",
     "landing.ehfBody":
-      "EHF 3.0 er den norske profilen av PEPPOL BIS Billing 3.0, formatet det offentlige og store kunder krever. Hver faktura kan lastes ned som validert XML, klar for innsending.",
+      "Du laster allerede ned hver faktura som PDF og som validert EHF 3.0 / PEPPOL BIS Billing 3.0 XML — klar til innsending. Direkte EHF-utsending, BankID-signering og Vipps-betaling står for tur.",
 
     "landing.pricingEyebrow":    "Pris",
     "landing.pricingTitle":      "Betal når du sender. Ingen binding.",
@@ -62,7 +62,7 @@ const dict: Record<Locale, Record<string, string>> = {
     "pricing.best":  "Best for de fleste",
     "pricing.freeNote": "3 fakturaer gratis ved registrering. Ingen abonnement, ingen binding.",
 
-    "footer.tagline": "Lagd i Trondheim med uvanlig mye omsorg.",
+    "footer.tagline": "Lagd på Nesodden med uvanlig mye omsorg.",
 
     // Existing form / app strings (preserved from previous dictionary)
     "VAT Number": "Mva.-nummer",
@@ -271,7 +271,7 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.heroBullet1":       "3 invoices free",
     "landing.heroBullet2":       "PDF + EHF / PEPPOL",
     "landing.heroBullet3":       "Norwegian VAT built in",
-    "landing.heroBullet4":       "Made in Trondheim",
+    "landing.heroBullet4":       "Made on Nesodden",
 
     "landing.manifestoEyebrow":  "Manifesto",
     "landing.manifestoA":        "You're a freelancer, not a bookkeeper.",
@@ -285,10 +285,10 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.value3Title":       "EHF included",
     "landing.value3Body":        "Download EHF 3.0 XML from every invoice, validated against PEPPOL BIS Billing 3.0. Ready for public-sector and large buyers.",
 
-    "landing.ehfEyebrow":        "New · EHF 3.0 / PEPPOL",
-    "landing.ehfQuote":          "PEPPOL-ready XML in one click.",
+    "landing.ehfEyebrow":        "Coming soon · BankID, Vipps, EHF sending",
+    "landing.ehfQuote":          "PDF and EHF XML today. The rest is on the way.",
     "landing.ehfBody":
-      "EHF 3.0 is the Norwegian profile of PEPPOL BIS Billing 3.0, the format public-sector and large buyers require. Every invoice can be downloaded as validated XML, ready for submission.",
+      "You already download every invoice as PDF and as validated EHF 3.0 / PEPPOL BIS Billing 3.0 XML — ready for submission. Direct EHF sending, BankID signing and Vipps payment are next up.",
 
     "landing.pricingEyebrow":    "Pricing",
     "landing.pricingTitle":      "Pay when you send. No subscription.",
@@ -304,7 +304,7 @@ const dict: Record<Locale, Record<string, string>> = {
     "pricing.best":  "Best for most",
     "pricing.freeNote": "3 invoices free on sign-up. No subscription, no lock-in.",
 
-    "footer.tagline": "Made in Trondheim with unusual care.",
+    "footer.tagline": "Made on Nesodden with unusual care.",
   },
 };
 
