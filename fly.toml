@@ -32,10 +32,10 @@ primary_region = 'ams'
 [checks]
   [checks.alive]
     type = "http"
-    grace_period = "10s"
+    grace_period = "30s"
     interval = "30s"
     method = "get"
-    path = "/api/health"
+    path = "/api/health/"
     timeout = "5s"
 
 [[vm]]
