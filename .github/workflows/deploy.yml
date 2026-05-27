@@ -47,7 +47,7 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           supabase link --project-ref xemufotqckljtkqoqbsf
-          supabase db push --include-all --yes
+          supabase db push --include-all -p "$SUPABASE_DB_PASSWORD"
 
       # ----------------------------------------------------------------------
       # 2. Build + deploy to Fly. --remote-only uses Fly's builders, no local
