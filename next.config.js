@@ -44,8 +44,8 @@ const { withSentryConfig } = require('@sentry/nextjs');
 
 module.exports = withSentryConfig(nextConfig, {
   silent: !process.env.CI,
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
+  org: 'aiakaki',
+  project: 'fakturio',
   widenClientFileUpload: true,
   hideSourceMaps: true,
   disableLogger: true,

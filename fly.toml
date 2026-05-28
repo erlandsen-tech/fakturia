@@ -13,6 +13,7 @@ primary_region = 'ams'
     NEXT_PUBLIC_SUPABASE_URL = "https://xemufotqckljtkqoqbsf.supabase.co"
     NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlbXVmb3RxY2tsanRrcW9xYnNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NjQzMjUsImV4cCI6MjA5MzU0MDMyNX0.BQMPHIf4M30mF9202DMfSq-AHCc3yv_k7R_yyorDHvo"
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51T91lFGczqI2tDLn2iAXYdf0lAk7A9ssakNoruMsyChyxgRF3GY8kPBGbit1m5Rp4FuCEkxeqX8U6ysTPZFQhAsd00F6pdJhFP"
+    NEXT_PUBLIC_SENTRY_DSN = "https://99dfecad68b060a6f001ad77e39a4b1f@o4511465458499584.ingest.de.sentry.io/4511465462890576"
 
 [env]
   PORT = "3003"
@@ -21,6 +22,7 @@ primary_region = 'ams'
   NEXT_PUBLIC_SUPABASE_URL = "https://xemufotqckljtkqoqbsf.supabase.co"
   NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlbXVmb3RxY2tsanRrcW9xYnNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NjQzMjUsImV4cCI6MjA5MzU0MDMyNX0.BQMPHIf4M30mF9202DMfSq-AHCc3yv_k7R_yyorDHvo"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51T91lFGczqI2tDLn2iAXYdf0lAk7A9ssakNoruMsyChyxgRF3GY8kPBGbit1m5Rp4FuCEkxeqX8U6ysTPZFQhAsd00F6pdJhFP"
+  NEXT_PUBLIC_SENTRY_DSN = "https://99dfecad68b060a6f001ad77e39a4b1f@o4511465458499584.ingest.de.sentry.io/4511465462890576"
 
 [http_service]
   internal_port = 3003
