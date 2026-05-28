@@ -28,6 +28,21 @@ export async function POST(request: Request) {
     return new NextResponse(`Webhook Error: ${(err as Error).message}`, { status: 400 });
   }
 
+  // Idempotency: claim this event_id before processing. A duplicate Stripe
+  // retry will hit the primary-key conflict and be acknowledged without
+  // re-running side effects (double-crediting points, etc.).
+  const { error: claimError } = await supabaseAdmin
+    .from('stripe_webhook_events')
+    .insert({ event_id: event.id, event_type: event.type });
+
+  if (claimError) {
+    if (claimError.code === '23505') {
+      return NextResponse.json({ received: true, deduplicated: true });
+    }
+    console.error('Failed to claim webhook event:', claimError);
+    return new NextResponse('Failed to record event', { status: 500 });
+  }
+
   // Handle checkout.session.completed (one-time packs + subscriptions)
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
