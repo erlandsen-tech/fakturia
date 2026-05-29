@@ -1,4 +1,4 @@
-# 08 — PDF & email templates
+# 08 - PDF & email templates
 
 Two transactional surfaces: the **PDF** the recipient downloads (`@react-pdf/renderer` already in deps), and the **email** notification with a big "Open & pay" button.
 
@@ -11,7 +11,7 @@ import {
   Document, Page, Text, View, StyleSheet, Font, Image,
 } from "@react-pdf/renderer";
 
-// Self-host the brand fonts for react-pdf — point these at /public after running:
+// Self-host the brand fonts for react-pdf - point these at /public after running:
 //   curl -L "https://fonts.gstatic.com/s/instrumentserif/v17/..." -o public/fonts/...
 // (use Google Fonts Helper to grab the .woff2 URLs)
 Font.register({
@@ -265,9 +265,9 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 ```
 
-> The font URLs above are Google Fonts CDN — fine for server-side react-pdf in Next.js. If you want fully self-hosted, drop the .ttf files in `public/fonts/` and update the `src` paths.
+> The font URLs above are Google Fonts CDN - fine for server-side react-pdf in Next.js. If you want fully self-hosted, drop the .ttf files in `public/fonts/` and update the `src` paths.
 
-## Email template — `src/components/emails/InvoiceEmail.tsx` (NEW)
+## Email template - `src/components/emails/InvoiceEmail.tsx` (NEW)
 
 Plain HTML email (no react-email needed). Use this with whatever transactional provider you're plugged into (Resend / Postmark / Supabase Edge functions).
 

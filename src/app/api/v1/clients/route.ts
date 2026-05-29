@@ -26,7 +26,7 @@ async function authenticateApiKey(request: NextRequest): Promise<string | null> 
 }
 
 /**
- * GET /api/v1/clients — List clients
+ * GET /api/v1/clients - List clients
  */
 export async function GET(request: NextRequest) {
   const userId = await authenticateApiKey(request);
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/v1/clients — Create client
+ * POST /api/v1/clients - Create client
  */
 export async function POST(request: NextRequest) {
   const userId = await authenticateApiKey(request);

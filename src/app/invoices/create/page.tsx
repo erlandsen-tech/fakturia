@@ -230,7 +230,7 @@ export default function CreateInvoicePage() {
         const sendBody = await sendRes.json();
         if (!sendRes.ok) {
           toast.error(sendBody.error || t('Invoice created but failed to send'));
-          // Still navigate — invoice exists as draft
+          // Still navigate - invoice exists as draft
         } else {
           if (typeof sendBody.data?.remaining_points === 'number') {
             setProfile((prev) => prev ? { ...prev, invoice_points: sendBody.data.remaining_points } : prev);

@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { createClientSchema } from '@/lib/validations/invoice';
 
 /**
- * GET /api/clients — List the authed user's clients
+ * GET /api/clients - List the authed user's clients
  */
 export async function GET() {
   try {
@@ -20,7 +20,7 @@ export async function GET() {
 }
 
 /**
- * POST /api/clients — Create a client
+ * POST /api/clients - Create a client
  */
 export async function POST(request: NextRequest) {
   try {

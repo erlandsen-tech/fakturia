@@ -14,7 +14,7 @@ import { t } from "@/lib/i18n.server";
 export default function LandingPage() {
   return (
     <div className="bg-paper-grain text-ink">
-      {/* TOP BAR — logo + sign-in entry point */}
+      {/* TOP BAR - logo + sign-in entry point */}
       <header className="border-b border-ink/10 bg-paper/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto py-4 px-6 lg:px-12 flex justify-between items-center">
           <Link
@@ -217,8 +217,19 @@ export default function LandingPage() {
           <Wordmark size={1.4} inverted />
           <div className="mt-3 text-xs">{t("footer.tagline")}</div>
         </div>
-        <div className="text-xs">
-          <span>Org.nr 925 100 200</span>
+        <div className="text-xs flex flex-col items-start md:items-end gap-2">
+          <div className="flex flex-wrap gap-5">
+            <Link href="/privacy" className="hover:text-paper transition-colors">
+              {t("footer.privacy")}
+            </Link>
+            <Link href="/terms" className="hover:text-paper transition-colors">
+              {t("footer.terms")}
+            </Link>
+            <Link href="/status" className="hover:text-paper transition-colors">
+              {t("footer.status")}
+            </Link>
+          </div>
+          <span>AIAKAKI · Org.nr 937 074 212</span>
         </div>
       </footer>
     </div>

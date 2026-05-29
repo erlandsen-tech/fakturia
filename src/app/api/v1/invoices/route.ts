@@ -55,7 +55,7 @@ async function authenticateApiKey(request: NextRequest): Promise<string | null> 
 }
 
 /**
- * POST /api/v1/invoices — Create invoice via AI API
+ * POST /api/v1/invoices - Create invoice via AI API
  */
 export async function POST(request: NextRequest) {
   // Auth
@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/v1/invoices — List invoices via AI API
+ * GET /api/v1/invoices - List invoices via AI API
  */
 export async function GET(request: NextRequest) {
   const userId = await authenticateApiKey(request);

@@ -1,8 +1,8 @@
-# 11 — EHF / PEPPOL BIS Billing 3.0 export
+# 11 - EHF / PEPPOL BIS Billing 3.0 export
 
 Shipped 2026-05-13. Adds a second invoice export format alongside the PDF: a UBL 2.1 XML document conforming to **EHF 3.0** (the Norwegian profile of PEPPOL BIS Billing 3.0). Users can download it from the invoice page or have it auto-attached to the send-invoice email.
 
-This is **step 1 of two**. Step 2 — delivering EHF over the PEPPOL network via an Access Point — is researched but not implemented; see "Follow-ups" at the bottom.
+This is **step 1 of two**. Step 2 - delivering EHF over the PEPPOL network via an Access Point - is researched but not implemented; see "Follow-ups" at the bottom.
 
 ## Specs
 
@@ -25,7 +25,7 @@ Key invariants the generator enforces:
 
 ## Schema (migration `20260513120000_ehf_invoice_fields.sql`)
 
-Additive only — no nullable→required changes, no renames.
+Additive only - no nullable→required changes, no renames.
 
 ```
 clients         + org_number, address_line1, address_line2, postal_code,
@@ -45,7 +45,7 @@ invoice_items   + unit_code (default 'C62')
 | `src/app/api/invoices/[id]/ehf/route.ts` | `GET` → `Content-Type: application/xml`, `Content-Disposition: attachment; filename="EHF_<n>.xml"`. Returns `422 { missing }` when required fields are unset so the UI can guide the user. |
 | `src/components/InvoiceDetailClient.tsx` | "Last ned EHF" button next to "Last ned PDF". |
 | `src/lib/email.ts` | `sendInvoiceEmail` now accepts optional `ehfXml` and attaches it. |
-| `src/app/api/invoices/[id]/route.ts` (PATCH send) | Best-effort EHF generation. If buyer/seller metadata is incomplete the XML is dropped silently — the PDF email still goes out. |
+| `src/app/api/invoices/[id]/route.ts` (PATCH send) | Best-effort EHF generation. If buyer/seller metadata is incomplete the XML is dropped silently - the PDF email still goes out. |
 | `src/app/clients/new/page.tsx` + `clients/[id]/page.tsx` | "EHF / e-invoice" form section: orgnr, MVA, postal address, PEPPOL endpoint. |
 
 ## Required fields (validation)
@@ -71,9 +71,9 @@ The download API surfaces this as `422 { error, missing: [...] }`; the button to
 - **UI for `buyer_reference` and `payment_reference` (KID).** Columns exist; no input field yet. The generator falls back to `client.company || client.name` for `BuyerReference`, which is acceptable for private receivers but public-sector buyers usually need a specific reference (e.g. ressursnummer).
 - **Unit-code selector on line items.** Currently every line is `C62` (piece). Add a dropdown when the first user complains.
 - **Schematron validation in CI.** Run the official EHF schematron against a fixture invoice on each PR. Reduces the risk of regression breaking compliance.
-- **Step 2 — delivery via PEPPOL Access Point.** Today users download the XML and forward it themselves. To deliver it electronically over PEPPOL we need an AP provider. Research summary:
-  - **B2Brouter (ES)** — best DX-to-price for a small SaaS. Public pricing (€110/yr Pro unlimited), self-serve sign-up, REST + OpenAPI docs, EHF/NO certified. Free 24/yr tier to prototype.
-  - **SendRegning (Visma, NO)** — NOK 11/invoice + NOK 35/mo. Self-serve, NO-market trusted, REST API at `sendregning.github.io`. Higher per-invoice cost but transparent.
+- **Step 2 - delivery via PEPPOL Access Point.** Today users download the XML and forward it themselves. To deliver it electronically over PEPPOL we need an AP provider. Research summary:
+  - **B2Brouter (ES)** - best DX-to-price for a small SaaS. Public pricing (€110/yr Pro unlimited), self-serve sign-up, REST + OpenAPI docs, EHF/NO certified. Free 24/yr tier to prototype.
+  - **SendRegning (Visma, NO)** - NOK 11/invoice + NOK 35/mo. Self-serve, NO-market trusted, REST API at `sendregning.github.io`. Higher per-invoice cost but transparent.
   - Skip Storecove (sales-only, ~€495/mo), Pagero/Tickstar, Logiq (enterprise sales). Skip Tripletex/Unimicro (accounting systems, not resellable APs).
   - Recommended integration: a `POST /api/invoices/[id]/send-via-peppol` endpoint that takes the existing EHF XML, POSTs it to the provider with our API key, and stores the provider's tracking ID on the invoice.
 

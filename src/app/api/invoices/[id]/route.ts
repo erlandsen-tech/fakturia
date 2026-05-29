@@ -223,7 +223,7 @@ export async function PATCH(
         });
 
         // Best-effort EHF XML attachment. Skipped silently if buyer/seller
-        // metadata is incomplete — the PDF still gets sent.
+        // metadata is incomplete - the PDF still gets sent.
         let ehfXml: string | null = null;
         try {
           ehfXml = buildEhfInvoice({

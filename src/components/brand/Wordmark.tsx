@@ -8,7 +8,7 @@ interface WordmarkProps {
 }
 
 /**
- * "Fakturio." — italic F, roman "akturio", clay period.
+ * "Fakturio." - italic F, roman "akturio", clay period.
  * Pure CSS, no SVG. Scales with the size multiplier.
  */
 export function Wordmark({ size = 1, className, inverted, monochrome }: WordmarkProps) {

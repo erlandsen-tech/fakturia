@@ -1,5 +1,5 @@
 -- Base tables. Created out-of-band on the original Supabase project,
--- but missing from migrations — added here so a fresh DB can be bootstrapped.
+-- but missing from migrations - added here so a fresh DB can be bootstrapped.
 
 -- Use gen_random_uuid() (built-in, no extension needed on modern Postgres)
 

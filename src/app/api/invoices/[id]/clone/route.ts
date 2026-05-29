@@ -3,7 +3,7 @@ import { fetchUserRecord, getAuthenticatedUser } from '@/lib/auth';
 import { createClient } from '@/utils/supabase/server';
 
 /**
- * POST /api/invoices/[id]/clone — Duplicate an invoice as a new draft.
+ * POST /api/invoices/[id]/clone - Duplicate an invoice as a new draft.
  * Copies client, line items, notes, delivery info, vat_rate. Allocates a new
  * invoice number, sets status='draft', issue_date=today, due_date keeps the
  * original day-offset from issue→due.

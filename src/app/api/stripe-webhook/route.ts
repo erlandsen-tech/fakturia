@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
     try {
       if (checkoutType === 'pack') {
-        // Bundle pack purchase — add invoice points
+        // Bundle pack purchase - add invoice points
         const invoicesToAdd = parseInt(session.metadata?.invoices || '0', 10);
         if (invoicesToAdd === 0) {
           console.error('Invalid invoices count in pack metadata');
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         });
 
         if (error) {
-          // Profile might not exist yet — create it
+          // Profile might not exist yet - create it
           if (error.code === 'PGRST116' || error.message?.includes('not found')) {
             const { error: insertError } = await supabaseAdmin
               .from('profiles')
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
         console.log(`Added ${invoicesToAdd} invoice points for user ${userId} (pack: ${session.metadata?.pack})`);
 
       } else if (checkoutType === 'subscription') {
-        // Subscription activation — set tier
+        // Subscription activation - set tier
         const tier = session.metadata?.tier || 'starter';
         const { error } = await supabaseAdmin
           .from('profiles')

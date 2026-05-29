@@ -11,8 +11,8 @@ export async function renderInvoicePdf(data: InvoicePDFData): Promise<Buffer> {
 }
 
 /**
- * Adapter: maps a flat (company, client, invoice) payload — the shape used by
- * earlier callers — to the new nested `InvoicePDFProps`. Keeps the email/API
+ * Adapter: maps a flat (company, client, invoice) payload - the shape used by
+ * earlier callers - to the new nested `InvoicePDFProps`. Keeps the email/API
  * routes working without touching their data assembly.
  */
 export interface LegacyInvoicePDFData {

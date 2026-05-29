@@ -1,4 +1,4 @@
-# 02 — Brand atoms: Wordmark, Mark, Button variants, Navbar
+# 02 - Brand atoms: Wordmark, Mark, Button variants, Navbar
 
 The smallest reusable brand pieces. Wordmark + Mark are SVG-free (CSS-only) so they scale perfectly at any DPR. Button gains a `clay` variant. Navbar is rebranded.
 
@@ -15,7 +15,7 @@ interface WordmarkProps {
 }
 
 /**
- * "Fakturio." — italic F, roman "akturio", clay period.
+ * "Fakturio." - italic F, roman "akturio", clay period.
  * Pure CSS, no SVG. Scales with the size multiplier.
  */
 export function Wordmark({ size = 1, className, inverted, monochrome }: WordmarkProps) {
@@ -82,7 +82,7 @@ export function Mark({ size = 40, className }: MarkProps) {
 }
 ```
 
-## File: `src/components/ui/button.tsx` (PATCH — add `clay` variant + brand sizing)
+## File: `src/components/ui/button.tsx` (PATCH - add `clay` variant + brand sizing)
 
 The shadcn-generated file uses `cva`. Replace the `variants` block (keep the rest of the file as shadcn ships it):
 
@@ -116,7 +116,7 @@ const buttonVariants = cva(
 
 ## File: `src/components/navbar.tsx` (REPLACE wordmark/text only)
 
-Surgical edits — keep all auth + routing logic. Two changes:
+Surgical edits - keep all auth + routing logic. Two changes:
 
 1. Replace the text logo:
 
@@ -151,7 +151,7 @@ import { Mark } from "@/components/brand/Mark";
   <div className="container mx-auto py-4 px-6 flex justify-between items-center">
 ```
 
-3. Update the nav-link className for active state — clay underline instead of slate primary:
+3. Update the nav-link className for active state - clay underline instead of slate primary:
 
 ```tsx
 // in each <Link> className arg, swap text-primary for text-clay

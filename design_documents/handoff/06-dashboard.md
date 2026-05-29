@@ -1,6 +1,6 @@
-# 06 — Dashboard
+# 06 - Dashboard
 
-The current dashboard mostly works — this chapter is a **restyle**, not a rewrite. Replace the slate cards with the paper aesthetic, swap the table chrome for the brand's ink underline + clay status pills, and add the warm "Good morning" greeting in italic serif.
+The current dashboard mostly works - this chapter is a **restyle**, not a rewrite. Replace the slate cards with the paper aesthetic, swap the table chrome for the brand's ink underline + clay status pills, and add the warm "Good morning" greeting in italic serif.
 
 ## File: `src/app/dashboard/page.tsx` (REPLACE inner JSX; keep data fetching as-is)
 
@@ -35,7 +35,7 @@ return (
       </Link>
     </div>
 
-    {/* STATS — 4 paper tiles */}
+    {/* STATS - 4 paper tiles */}
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-9">
       <StatCard
         label="Utestående"
@@ -46,7 +46,7 @@ return (
       <StatCard
         label="Forfalt"
         value={fmtKr(stats.overdue, false)}
-        sub={stats.overdueLatest ?? "—"}
+        sub={stats.overdueLatest ?? "-"}
         accent="overdue"
       />
       <StatCard
@@ -87,7 +87,7 @@ return (
           <div className="font-mono text-[13px] text-ink-3">{inv.number}</div>
           <div className="text-[15px]">{inv.client_name}</div>
           <div className="font-mono text-right text-sm">kr {fmtKr(inv.amount, false)}</div>
-          <div className="font-mono text-right text-[13px] text-ink-3">{inv.due_date ? fmtDate(inv.due_date).slice(0, 5) : "—"}</div>
+          <div className="font-mono text-right text-[13px] text-ink-3">{inv.due_date ? fmtDate(inv.due_date).slice(0, 5) : "-"}</div>
           <div className="text-right">
             <StatusPill status={inv.status} />
           </div>
@@ -99,7 +99,7 @@ return (
 );
 ```
 
-## Helpers — co-locate at the bottom of the file
+## Helpers - co-locate at the bottom of the file
 
 ```tsx
 function StatCard({ label, value, sub, accent }: {
@@ -165,7 +165,7 @@ function monthName(d: Date) {
 
 ## Sidebar (if you want the dark inset sidebar from the brand doc)
 
-The brand mockup shows a 240px ink sidebar. The current repo uses a top navbar — keep the top navbar for v1, but optionally introduce a dashboard-only sidebar later by wrapping `app/(app)/layout.tsx`. **Skip for now** — out of scope for the brand port.
+The brand mockup shows a 240px ink sidebar. The current repo uses a top navbar - keep the top navbar for v1, but optionally introduce a dashboard-only sidebar later by wrapping `app/(app)/layout.tsx`. **Skip for now** - out of scope for the brand port.
 
 ## Commit
 

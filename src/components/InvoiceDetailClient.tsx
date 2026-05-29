@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import type { InvoiceWithDetails, InvoiceStatus } from '@/types/database';
-import { ArrowLeft, Save, Printer, Trash, Send, FileCode2 } from 'lucide-react';
+import { ArrowLeft, Save, Trash, Send, FileCode2 } from 'lucide-react';
 import Link from 'next/link';
 import { t } from '@/lib/i18n';
 import { PDFDownloadLink } from '@react-pdf/renderer';
@@ -53,8 +53,6 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
     setSaving(true);
 
     try {
-      console.log('Attempting to save invoice with data:', formData);
-      
       // Prepare data for submission, converting empty strings to null for timestamp fields
       const submitData = {
         ...formData,
@@ -62,9 +60,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
         notes: formData.notes.trim() === '' ? null : formData.notes,
         delivery_place: formData.delivery_place.trim() === '' ? null : formData.delivery_place,
       };
-      
-      console.log('Processed data for submission:', submitData);
-      
+
       const response = await fetch(`/api/invoices/${invoice.id}`, {
         method: 'PUT',
         headers: {
@@ -72,9 +68,6 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
         },
         body: JSON.stringify(submitData),
       });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -91,8 +84,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
         throw new Error(errorData.error || `HTTP ${response.status}: Failed to update invoice`);
       }
 
-      const result = await response.json();
-      console.log('Success response:', result);
+      await response.json();
 
       toast.success(t('Invoice updated successfully'));
       router.refresh();
@@ -209,7 +201,7 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   const totalVatAmount = invoice.items.reduce((sum, item) => sum + (item.vat_amount || 0), 0);
   const totalAmount = subtotalAmount + totalVatAmount;
 
-  // Check if invoice can be sent (draft, sent, overdue all allow sending — paid/cancelled don't)
+  // Check if invoice can be sent (draft, sent, overdue all allow sending - paid/cancelled don't)
   const canSendInvoice = formData.status !== 'paid' && formData.status !== 'cancelled';
   const sendButtonLabel = formData.status === 'draft' ? t('Send Invoice') : t('Send på nytt');
 

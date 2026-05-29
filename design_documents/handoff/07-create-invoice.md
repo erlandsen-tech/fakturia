@@ -1,6 +1,6 @@
-# 07 — Create invoice form
+# 07 - Create invoice form
 
-The current `src/app/invoices/create/page.tsx` (21KB) has solid form logic — keep it. This chapter is **visual + UX rebrand**: the form sits on a white "paper" card with the brand wordmark in the top-left corner, and there's a new AI-assist sidebar on the right.
+The current `src/app/invoices/create/page.tsx` (21KB) has solid form logic - keep it. This chapter is **visual + UX rebrand**: the form sits on a white "paper" card with the brand wordmark in the top-left corner, and there's a new AI-assist sidebar on the right.
 
 ## Layout: replace the outer wrapper + add the AI sidebar
 
@@ -104,7 +104,7 @@ export function AIAssistCard({ onApply }: { onApply: (patch: any) => void }) {
         rows={3}
       />
       <p className="text-xs text-ink-mute mt-3 leading-[1.6]">
-        Skriv det med ord — vi finner kunden, satser, og mva-prosent. Du redigerer, godkjenner, sender.
+        Skriv det med ord - vi finner kunden, satser, og mva-prosent. Du redigerer, godkjenner, sender.
       </p>
       <Button
         variant="clay"

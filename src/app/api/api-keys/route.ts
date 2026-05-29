@@ -14,7 +14,7 @@ async function requireUser() {
 }
 
 /**
- * GET /api/api-keys — List user's API keys (no key material returned)
+ * GET /api/api-keys - List user's API keys (no key material returned)
  */
 export async function GET() {
   const ctx = await requireUser();
@@ -31,8 +31,8 @@ export async function GET() {
 }
 
 /**
- * POST /api/api-keys — Create a new API key. Returns full key once.
- * Open to any authenticated user — usage is metered via invoice points.
+ * POST /api/api-keys - Create a new API key. Returns full key once.
+ * Open to any authenticated user - usage is metered via invoice points.
  */
 export async function POST(request: NextRequest) {
   const ctx = await requireUser();
@@ -66,6 +66,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create API key' }, { status: 500 });
   }
 
-  // Return the plaintext key ONCE — caller must store it.
+  // Return the plaintext key ONCE - caller must store it.
   return NextResponse.json({ data: { ...data, key: apiKey } }, { status: 201 });
 }

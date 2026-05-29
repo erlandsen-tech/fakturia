@@ -208,4 +208,4 @@ If a security vulnerability is discovered:
 
 ---
 
-**Remember:** Security is not a feature—it's a requirement. Every new addition to the application should be evaluated through the lens of these security principles. 
+**Remember:** Security is not a feature, it's a requirement. Every new addition to the application should be evaluated through the lens of these security principles. 

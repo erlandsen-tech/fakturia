@@ -62,7 +62,7 @@ export default function PricingPage() {
             Enkel pris, ingen binding
           </h1>
           <p className="text-lg text-slate-600">
-            Kjøp fakturaer når du trenger dem, eller abonner for ubegrenset.
+            Kjøp fakturaer når du trenger dem. Ingen abonnement, ingen binding.
           </p>
         </div>
 

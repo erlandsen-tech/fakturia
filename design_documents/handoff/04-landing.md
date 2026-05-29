@@ -1,8 +1,8 @@
-# 04 — Landing page rewrite
+# 04 - Landing page rewrite
 
 Replaces `src/app/page.tsx`. Drops the slate/emerald shadcn cards in favor of the paper-on-ink layout from the brand doc: italic-serif hero, manifesto strip, three-up values band, MCP/AI slot with terminal block, three-tier pricing.
 
-Only the **landing page** copy speaks to the AI/MCP angle — that's the headline differentiator.
+Only the **landing page** copy speaks to the AI/MCP angle - that's the headline differentiator.
 
 ## File: `src/app/page.tsx` (REPLACE entire file)
 
@@ -165,7 +165,7 @@ export default function LandingPage() {
           <Link href="/privacy">{t("footer.privacy")}</Link>
           <Link href="/terms">{t("footer.terms")}</Link>
           <Link href="/status">{t("footer.status")}</Link>
-          <span>Org.nr 925 100 200</span>
+          <span>AIAKAKI · Org.nr 937 074 212</span>
         </div>
       </footer>
     </div>

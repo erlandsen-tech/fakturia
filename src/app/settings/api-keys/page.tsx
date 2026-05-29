@@ -101,7 +101,7 @@ export default function ApiKeysPage() {
             <CardHeader>
               <CardTitle className="text-emerald-900">Ny nøkkel opprettet</CardTitle>
               <CardDescription className="text-emerald-800">
-                Kopier nøkkelen nå — den vil ikke vises igjen.
+                Kopier nøkkelen nå. Den vil ikke vises igjen.
               </CardDescription>
             </CardHeader>
             <CardContent>
