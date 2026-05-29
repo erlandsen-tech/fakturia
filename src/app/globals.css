@@ -7,7 +7,7 @@
 */
 
 @theme {
-  /* — Raw brand palette (use directly via bg-paper, text-clay, etc.) — */
+  /* - Raw brand palette (use directly via bg-paper, text-clay, etc.) - */
   --color-paper:      oklch(0.946 0.028 78);
   --color-paper-2:    oklch(0.911 0.039 78);
   --color-paper-3:    oklch(0.873 0.048 78);
@@ -33,7 +33,7 @@
   --color-status-sent:    oklch(0.460 0.030 256);
   --color-status-draft:   oklch(0.624 0.014 60);
 
-  /* — shadcn semantic tokens, remapped to brand — */
+  /* - shadcn semantic tokens, remapped to brand - */
   --color-background:           var(--color-paper);
   --color-foreground:           var(--color-ink);
   --color-card:                 var(--color-paper);
@@ -54,12 +54,12 @@
   --color-input:                oklch(0.196 0.012 60 / 0.16);
   --color-ring:                 var(--color-clay);
 
-  /* — Type stack (next/font wires the actual @font-face) — */
+  /* - Type stack (next/font wires the actual @font-face) - */
   --font-sans:    var(--font-inter-tight), "Inter", system-ui, -apple-system, sans-serif;
   --font-serif:   var(--font-instrument-serif), "Iowan Old Style", Georgia, serif;
   --font-mono:    var(--font-jetbrains-mono), ui-monospace, "Roboto Mono", monospace;
 
-  /* — Radii (gentle, mostly square — paper, not material) — */
+  /* - Radii (gentle, mostly square - paper, not material) - */
   --radius:       4px;
   --radius-sm:    2px;
   --radius-md:    4px;
@@ -67,7 +67,7 @@
   --radius-xl:    14px;
   --radius-pill:  999px;
 
-  /* — Shadows that read as paper — */
+  /* - Shadows that read as paper - */
   --shadow-paper: 0 1px 0 oklch(0.196 0.012 60 / 0.04), 0 8px 24px -12px oklch(0.196 0.012 60 / 0.18);
   --shadow-lift:  0 1px 0 oklch(0.196 0.012 60 / 0.06), 0 24px 48px -20px oklch(0.196 0.012 60 / 0.28);
   --shadow-deep:  0 30px 60px -30px oklch(0.196 0.012 60 / 0.45);
@@ -76,7 +76,7 @@
 @variant dark (&:is(.dark *));
 
 .dark {
-  /* Inverted: ink-on-paper becomes paper-on-ink. v2-only — currently unreachable. */
+  /* Inverted: ink-on-paper becomes paper-on-ink. v2-only - currently unreachable. */
   --color-background:           var(--color-ink);
   --color-foreground:           var(--color-paper);
   --color-card:                 oklch(0.265 0.014 60);

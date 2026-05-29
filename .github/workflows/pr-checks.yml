@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      # Public build-time values. Already committed in fly.toml — these are
+      # Public build-time values. Already committed in fly.toml - these are
       # safe to embed in workflow YAML. Runtime secrets live on Fly.
       NEXT_PUBLIC_BASE_URL: https://fakturio.no
       NEXT_PUBLIC_SUPABASE_URL: https://xemufotqckljtkqoqbsf.supabase.co

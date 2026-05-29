@@ -41,12 +41,12 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.value2Title":       "Klar for Norge",
     "landing.value2Body":        "Organisasjonsnummer, MVA, KID og bankkonto. Alt det norske håndverket en faktura krever, fylt inn riktig første gang.",
     "landing.value3Title":       "EHF inkludert",
-    "landing.value3Body":        "Last ned EHF 3.0 XML fra hver faktura, validert mot PEPPOL BIS Billing 3.0. Klar for offentlige innkjøp og store kunder.",
+    "landing.value3Body":        "Last ned EHF 3.0 XML fra hver faktura, formatert etter PEPPOL BIS Billing 3.0. Klar for offentlige innkjøp og store kunder.",
 
     "landing.ehfEyebrow":        "Snart · BankID, Vipps, EHF-utsending",
     "landing.ehfQuote":          "PDF og EHF-XML i dag. Resten kommer.",
     "landing.ehfBody":
-      "Du laster allerede ned hver faktura som PDF og som validert EHF 3.0 / PEPPOL BIS Billing 3.0 XML — klar til innsending. Direkte EHF-utsending, BankID-signering og Vipps-betaling står for tur.",
+      "Du laster allerede ned hver faktura som PDF og som EHF 3.0 / PEPPOL BIS Billing 3.0-formatert XML, klar til innsending. Direkte EHF-utsending, BankID-signering og Vipps-betaling står for tur.",
 
     "landing.pricingEyebrow":    "Pris",
     "landing.pricingTitle":      "Betal når du sender. Ingen binding.",
@@ -63,6 +63,9 @@ const dict: Record<Locale, Record<string, string>> = {
     "pricing.freeNote": "3 fakturaer gratis ved registrering. Ingen abonnement, ingen binding.",
 
     "footer.tagline": "Lagd på Nesodden med uvanlig mye omsorg.",
+    "footer.privacy": "Personvern",
+    "footer.terms": "Vilkår",
+    "footer.status": "Status",
 
     // Existing form / app strings (preserved from previous dictionary)
     "VAT Number": "Mva.-nummer",
@@ -283,12 +286,12 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.value2Title":       "Ready for Norway",
     "landing.value2Body":        "Org number, VAT, KID and bank account. All the Norwegian craft an invoice needs, filled in right the first time.",
     "landing.value3Title":       "EHF included",
-    "landing.value3Body":        "Download EHF 3.0 XML from every invoice, validated against PEPPOL BIS Billing 3.0. Ready for public-sector and large buyers.",
+    "landing.value3Body":        "Download EHF 3.0 XML from every invoice, formatted for PEPPOL BIS Billing 3.0. Ready for public-sector and large buyers.",
 
     "landing.ehfEyebrow":        "Coming soon · BankID, Vipps, EHF sending",
     "landing.ehfQuote":          "PDF and EHF XML today. The rest is on the way.",
     "landing.ehfBody":
-      "You already download every invoice as PDF and as validated EHF 3.0 / PEPPOL BIS Billing 3.0 XML — ready for submission. Direct EHF sending, BankID signing and Vipps payment are next up.",
+      "You already download every invoice as PDF and as EHF 3.0 / PEPPOL BIS Billing 3.0-formatted XML, ready for submission. Direct EHF sending, BankID signing and Vipps payment are next up.",
 
     "landing.pricingEyebrow":    "Pricing",
     "landing.pricingTitle":      "Pay when you send. No subscription.",
@@ -305,6 +308,9 @@ const dict: Record<Locale, Record<string, string>> = {
     "pricing.freeNote": "3 invoices free on sign-up. No subscription, no lock-in.",
 
     "footer.tagline": "Made on Nesodden with unusual care.",
+    "footer.privacy": "Privacy",
+    "footer.terms": "Terms",
+    "footer.status": "Status",
   },
 };
 

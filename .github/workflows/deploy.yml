@@ -33,7 +33,7 @@ jobs:
 
       # ----------------------------------------------------------------------
       # 1. Apply any unpushed Supabase migrations BEFORE deploying app code.
-      #    Forward-only — additive migrations should always be safe; a failure
+      #    Forward-only - additive migrations should always be safe; a failure
       #    here aborts the deploy so the new app code never sees a half-migrated
       #    schema.
       # ----------------------------------------------------------------------

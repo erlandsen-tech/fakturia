@@ -1,6 +1,6 @@
-# 05 — Public invoice route (recipient view)
+# 05 - Public invoice route (recipient view)
 
-**New route.** A Fakturio link looks like `fakturio.no/i/<token>` — the recipient lands on a paper-feel page with one big CTA: pay. No auth, no signup, no chrome.
+**New route.** A Fakturio link looks like `fakturio.no/i/<token>` - the recipient lands on a paper-feel page with one big CTA: pay. No auth, no signup, no chrome.
 
 ## File: `src/app/i/[token]/page.tsx` (NEW)
 

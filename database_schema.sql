@@ -1,4 +1,4 @@
--- WARNING: This schema is for context only — generated from migrations 001-004.
+-- WARNING: This schema is for context only - generated from migrations 001-004.
 -- Do not run as-is. Apply via supabase/migrations/*.sql in order.
 
 -- ============================================================================
@@ -117,7 +117,7 @@ CREATE TABLE public.profiles (
   id uuid NOT NULL,
   invoice_points integer NOT NULL DEFAULT 0,
   next_invoice_number integer NOT NULL DEFAULT 1,                 -- 003
-  -- 003: subscription columns (dormant — no subscriptions sold in v1)
+  -- 003: subscription columns (dormant - no subscriptions sold in v1)
   subscription_tier text DEFAULT 'free',
   subscription_status text DEFAULT 'inactive',
   subscription_stripe_id text,
@@ -174,6 +174,6 @@ CREATE TABLE public.audit_log (
 --   public.seed_profile_with_trial_points()  -- 3 invoice_points for every new user
 
 -- ============================================================================
--- RLS — see migration 001 for full policies. All user-owned tables enforce
+-- RLS - see migration 001 for full policies. All user-owned tables enforce
 -- auth.uid() = user_id (text-cast on invoices/clients, native uuid elsewhere).
 -- ============================================================================

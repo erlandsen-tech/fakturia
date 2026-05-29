@@ -1,4 +1,4 @@
-# 01 — Foundations: tokens, fonts, paper
+# 01 - Foundations: tokens, fonts, paper
 
 Replaces the slate shadcn defaults with the Fakturio brand tokens, swaps Inter for the brand type pairing, and adds the paper-noise utility used by every page.
 
@@ -14,23 +14,23 @@ Replaces the slate shadcn defaults with the Fakturio brand tokens, swaps Inter f
 */
 
 @theme {
-  /* — Raw brand palette (use directly via bg-paper, text-clay, etc.) — */
-  --color-paper:      oklch(0.946 0.028 78);     /* #F4ECDC — primary canvas */
-  --color-paper-2:    oklch(0.911 0.039 78);     /* #EADFC9 — recessed */
-  --color-paper-3:    oklch(0.873 0.048 78);     /* #E0D2B6 — heavier surfaces */
-  --color-ink:        oklch(0.196 0.012 60);     /* #1A1815 — primary text */
-  --color-ink-2:      oklch(0.293 0.014 60);     /* #3B362E — secondary text */
-  --color-ink-3:      oklch(0.461 0.014 60);     /* #6B645A — muted */
-  --color-ink-mute:   oklch(0.624 0.014 60);     /* #9A9286 — captions */
+  /* - Raw brand palette (use directly via bg-paper, text-clay, etc.) - */
+  --color-paper:      oklch(0.946 0.028 78);     /* #F4ECDC - primary canvas */
+  --color-paper-2:    oklch(0.911 0.039 78);     /* #EADFC9 - recessed */
+  --color-paper-3:    oklch(0.873 0.048 78);     /* #E0D2B6 - heavier surfaces */
+  --color-ink:        oklch(0.196 0.012 60);     /* #1A1815 - primary text */
+  --color-ink-2:      oklch(0.293 0.014 60);     /* #3B362E - secondary text */
+  --color-ink-3:      oklch(0.461 0.014 60);     /* #6B645A - muted */
+  --color-ink-mute:   oklch(0.624 0.014 60);     /* #9A9286 - captions */
 
-  --color-clay:       oklch(0.626 0.171 38);     /* #DC4F2C — primary warm accent */
-  --color-clay-deep:  oklch(0.526 0.156 35);     /* #B23B1F — pressed */
+  --color-clay:       oklch(0.626 0.171 38);     /* #DC4F2C - primary warm accent */
+  --color-clay-deep:  oklch(0.526 0.156 35);     /* #B23B1F - pressed */
   --color-clay-tint:  oklch(0.852 0.066 38);     /* #F2C9B8 */
 
-  --color-sage:       oklch(0.526 0.034 122);    /* #6F7A5E — moss */
+  --color-sage:       oklch(0.526 0.034 122);    /* #6F7A5E - moss */
   --color-sage-tint:  oklch(0.836 0.030 122);    /* #C8CDB8 */
 
-  --color-sun:        oklch(0.788 0.122 80);     /* #E5B14C — old gold */
+  --color-sun:        oklch(0.788 0.122 80);     /* #E5B14C - old gold */
   --color-sun-tint:   oklch(0.882 0.083 86);     /* #F0D8A0 */
 
   --color-plum:       oklch(0.402 0.061 13);     /* #6B3F4D */
@@ -40,7 +40,7 @@ Replaces the slate shadcn defaults with the Fakturio brand tokens, swaps Inter f
   --color-status-sent:    oklch(0.460 0.030 256); /* #4D5B6B */
   --color-status-draft:   oklch(0.624 0.014 60);  /* #9A9286 */
 
-  /* — shadcn semantic tokens, remapped to brand — */
+  /* - shadcn semantic tokens, remapped to brand - */
   --color-background:           var(--color-paper);
   --color-foreground:           var(--color-ink);
   --color-card:                 var(--color-paper);
@@ -61,12 +61,12 @@ Replaces the slate shadcn defaults with the Fakturio brand tokens, swaps Inter f
   --color-input:                oklch(0.196 0.012 60 / 0.16);
   --color-ring:                 var(--color-clay);
 
-  /* — Type stack (next/font wires the actual @font-face) — */
+  /* - Type stack (next/font wires the actual @font-face) - */
   --font-sans:    var(--font-inter-tight), "Inter", system-ui, -apple-system, sans-serif;
   --font-serif:   var(--font-instrument-serif), "Iowan Old Style", Georgia, serif;
   --font-mono:    var(--font-jetbrains-mono), ui-monospace, "Roboto Mono", monospace;
 
-  /* — Radii (gentle, mostly square — paper, not material) — */
+  /* - Radii (gentle, mostly square - paper, not material) - */
   --radius:       4px;   /* default */
   --radius-sm:    2px;
   --radius-md:    4px;
@@ -74,7 +74,7 @@ Replaces the slate shadcn defaults with the Fakturio brand tokens, swaps Inter f
   --radius-xl:    14px;
   --radius-pill:  999px;
 
-  /* — Shadows that read as paper — */
+  /* - Shadows that read as paper - */
   --shadow-paper: 0 1px 0 oklch(0.196 0.012 60 / 0.04), 0 8px 24px -12px oklch(0.196 0.012 60 / 0.18);
   --shadow-lift:  0 1px 0 oklch(0.196 0.012 60 / 0.06), 0 24px 48px -20px oklch(0.196 0.012 60 / 0.28);
   --shadow-deep:  0 30px 60px -30px oklch(0.196 0.012 60 / 0.45);
@@ -83,7 +83,7 @@ Replaces the slate shadcn defaults with the Fakturio brand tokens, swaps Inter f
 @variant dark (&:is(.dark *));
 
 .dark {
-  /* Inverted: ink-on-paper becomes paper-on-ink. v2-only — currently unreachable. */
+  /* Inverted: ink-on-paper becomes paper-on-ink. v2-only - currently unreachable. */
   --color-background:           var(--color-ink);
   --color-foreground:           var(--color-paper);
   --color-card:                 oklch(0.265 0.014 60);
@@ -111,7 +111,7 @@ Replaces the slate shadcn defaults with the Fakturio brand tokens, swaps Inter f
 }
 
 @layer utilities {
-  /* Type role helpers — used everywhere instead of font-* classes when expressing role */
+  /* Type role helpers - used everywhere instead of font-* classes when expressing role */
   .font-display  { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.01em; }
   .font-numeric  { font-family: var(--font-mono); font-feature-settings: "tnum"; }
   .cap {
@@ -165,7 +165,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fakturio — fakturering for folk som heller vil gjøre noe annet",
+  title: "Fakturio - fakturering for folk som heller vil gjøre noe annet",
   description:
     "Et fakturaverktøy for norske enkeltpersonforetak. Vennlig, varmt, og gjort på 60 sekunder.",
 };
@@ -201,10 +201,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ## Why this works
 
-- **Tailwind v4 reads `@theme` directly** — no `tailwind.config.js` needed; the existing setup keeps its `components.json` cssVariables=true wiring, so all shadcn components automatically pick up the new `--color-primary` etc.
+- **Tailwind v4 reads `@theme` directly** - no `tailwind.config.js` needed; the existing setup keeps its `components.json` cssVariables=true wiring, so all shadcn components automatically pick up the new `--color-primary` etc.
 - **OKLCH** keeps the warm-paper palette stable across displays and lets us derive tints with `color-mix(in oklch, ...)`.
 - **next/font variables** flow into `--font-*` so utilities like `font-display` resolve correctly server-side without FOUT.
-- **Border-radius scale** is intentionally tight (2/4/8/14) — paper-feel, not iOS rounded-rect.
+- **Border-radius scale** is intentionally tight (2/4/8/14) - paper-feel, not iOS rounded-rect.
 
 ## Commit
 

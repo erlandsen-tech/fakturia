@@ -1,8 +1,8 @@
-# 03 — Illustrations: 5 surreal still-lifes
+# 03 - Illustrations: 5 surreal still-lifes
 
 Five SVG illustrations live in `src/components/brand/illustrations/`. Each one is hand-tuned ink-line + flat watercolor wash, with slight off-register fills for a risograph feel.
 
-**Theme rule, enforce in PRs:** never literal "money/coin/handshake/growth-chart" imagery. Translate the concept (an invoice, a payment, a balance) into a natural object — a folded paper bird, a bisected lemon-calculator, a stamp-moth, a stack of river stones, an inkwell tide.
+**Theme rule, enforce in PRs:** never literal "money/coin/handshake/growth-chart" imagery. Translate the concept (an invoice, a payment, a balance) into a natural object - a folded paper bird, a bisected lemon-calculator, a stamp-moth, a stack of river stones, an inkwell tide.
 
 ## File: `src/components/brand/illustrations/types.ts` (NEW)
 

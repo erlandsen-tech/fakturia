@@ -92,7 +92,7 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* STATS — 4 paper tiles */}
+        {/* STATS - 4 paper tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-9">
           <StatCard
             label="Utestående"
@@ -103,7 +103,7 @@ export default function DashboardPage() {
           <StatCard
             label="Forfalt"
             value={fmtKr(stats.overdue, false)}
-            sub={stats.overdueLatest ?? '—'}
+            sub={stats.overdueLatest ?? '-'}
             accent="overdue"
           />
           <StatCard
@@ -168,28 +168,28 @@ export default function DashboardPage() {
                 {/* Mobile card layout */}
                 <div className="md:hidden flex flex-col gap-1.5">
                   <div className="flex justify-between items-start gap-3">
-                    <div className="text-[15px] font-medium">{inv.client?.name ?? '—'}</div>
+                    <div className="text-[15px] font-medium">{inv.client?.name ?? '-'}</div>
                     <StatusPill status={inv.status} />
                   </div>
                   <div className="flex justify-between items-baseline gap-3 text-[13px] text-ink-3">
-                    <span className="font-mono">{inv.invoice_number ?? '—'}</span>
+                    <span className="font-mono">{inv.invoice_number ?? '-'}</span>
                     <span className="font-mono">
                       kr {fmtKr(Number(inv.total_amount ?? 0), false)}
                     </span>
                   </div>
                   <div className="font-mono text-[12px] text-ink-mute">
-                    {inv.due_date ? `Forfall ${fmtDate(inv.due_date).slice(0, 5)}` : '—'}
+                    {inv.due_date ? `Forfall ${fmtDate(inv.due_date).slice(0, 5)}` : '-'}
                   </div>
                 </div>
 
                 {/* Desktop grid cells */}
-                <div className="hidden md:block font-mono text-[13px] text-ink-3">{inv.invoice_number ?? '—'}</div>
-                <div className="hidden md:block text-[15px]">{inv.client?.name ?? '—'}</div>
+                <div className="hidden md:block font-mono text-[13px] text-ink-3">{inv.invoice_number ?? '-'}</div>
+                <div className="hidden md:block text-[15px]">{inv.client?.name ?? '-'}</div>
                 <div className="hidden md:block font-mono text-right text-sm">
                   kr {fmtKr(Number(inv.total_amount ?? 0), false)}
                 </div>
                 <div className="hidden md:block font-mono text-right text-[13px] text-ink-3">
-                  {inv.due_date ? fmtDate(inv.due_date).slice(0, 5) : '—'}
+                  {inv.due_date ? fmtDate(inv.due_date).slice(0, 5) : '-'}
                 </div>
                 <div className="hidden md:block text-right">
                   <StatusPill status={inv.status} />

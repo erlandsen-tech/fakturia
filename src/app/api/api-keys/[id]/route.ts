@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 
 /**
- * DELETE /api/api-keys/[id] — Revoke an API key (sets is_active=false)
+ * DELETE /api/api-keys/[id] - Revoke an API key (sets is_active=false)
  */
 export async function DELETE(
   _request: NextRequest,

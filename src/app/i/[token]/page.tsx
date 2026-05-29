@@ -238,8 +238,8 @@ export default async function PublicInvoicePage({ params }: PageProps) {
         <aside className="flex flex-col gap-6">
           <div className="bg-ink text-paper p-6">
             <div className="cap text-ink-mute mb-3.5">Bankoverføring</div>
-            <Detail k="Konto" v={inv.bank_account ?? "—"} mono inverted />
-            <Detail k="KID" v={inv.kid ?? "—"} mono inverted />
+            <Detail k="Konto" v={inv.bank_account ?? "-"} mono inverted />
+            <Detail k="KID" v={inv.kid ?? "-"} mono inverted />
             <Detail k="Forfall" v={fmtDate(inv.due_date)} inverted />
             <Detail k="Beløp" v={fmtKr(total)} mono inverted />
             <p className="mt-4 pt-4 border-t border-paper/15 text-[11px] text-ink-mute leading-[1.5]">

@@ -1,4 +1,4 @@
--- 004: Free trial — seed every new user's profile with 3 invoice points
+-- 004: Free trial - seed every new user's profile with 3 invoice points
 
 -- Idempotent profile-seeding function. Triggered on auth.users insert.
 CREATE OR REPLACE FUNCTION public.seed_profile_with_trial_points()
