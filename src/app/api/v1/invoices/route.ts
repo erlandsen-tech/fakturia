@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { createInvoiceSchema } from '@/lib/validations/invoice';
 import { renderLegacyInvoicePdf } from '@/lib/pdf';
 import { sendInvoiceEmail } from '@/lib/email';
 import crypto from 'crypto';
+
+// This route authenticates by API key (not a user session cookie), then trusts
+// the userId it derived from that key. It therefore runs ALL DB work through
+// the service role: there is no user JWT, so the anon SSR client cannot read
+// api_keys (RLS) nor call the points/numbering RPCs (revoked from anon +
+// authenticated in migration 20260601120000). userId is ALWAYS taken from the
+// authenticated API key, never from the request body.
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // Rate limiting (simple in-memory, use Redis/Upstash for production)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -33,8 +46,9 @@ async function authenticateApiKey(request: NextRequest): Promise<string | null> 
   const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
   const keyPrefix = apiKey.slice(0, 8);
 
-  // Look up API key in database
-  const supabase = await createClient();
+  // Look up API key in database (service role: there is no user JWT here, and
+  // api_keys RLS is scoped to auth.uid()).
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('api_keys')
     .select('user_id, is_active')
@@ -86,7 +100,7 @@ export async function POST(request: NextRequest) {
   }
 
   const data = result.data;
-  const supabase = await createClient();
+  const supabase = getSupabaseAdmin();
 
   try {
     // Create or find client
@@ -290,7 +304,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 
-  const supabase = await createClient();
+  const supabase = getSupabaseAdmin();
   const { searchParams } = new URL(request.url);
   const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
   const status = searchParams.get('status');

@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchUserRecord, updateUserRecord, deleteUserRecord, getAuthenticatedUser } from '@/lib/auth';
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { updateInvoiceSchema } from '@/lib/validations/invoice';
 import { renderLegacyInvoicePdf } from '@/lib/pdf';
 import { sendInvoiceEmail } from '@/lib/email';
 import { buildEhfInvoice, EhfValidationError } from '@/lib/ehf';
 import type { InvoiceWithDetails } from '@/types/database';
+
+// Point mutations (deduct/refund) run via the service role: the underlying
+// add_invoice_points/deduct_invoice_point RPCs are revoked from anon +
+// authenticated (migration 20260601120000), so they must not be called through
+// the user-context client. Ownership is already verified above via the user
+// client + RLS, and user.id is taken from the authenticated session.
+function getSupabaseAdmin() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 /**
  * GET /api/invoices/[id] - Fetch specific invoice with ownership verification
@@ -145,8 +158,9 @@ export async function PATCH(
       (profile?.subscription_tier === 'growth' || profile?.subscription_tier === 'enterprise');
 
     if (!isUnlimited) {
-      // Atomic deduct via RPC: returns null/undefined if no points to deduct
-      const { data: remaining, error: rpcError } = await supabase.rpc('deduct_invoice_point', {
+      // Atomic deduct via RPC: returns null/undefined if no points to deduct.
+      // Routed through the service role (RPC is revoked from authenticated).
+      const { data: remaining, error: rpcError } = await getSupabaseAdmin().rpc('deduct_invoice_point', {
         p_user_id: user.id,
       });
 
@@ -296,9 +310,13 @@ export async function PATCH(
 
       await updateUserRecord('invoices', params.id, { status: 'sent' });
     } catch (err) {
+      // A thrown Resend error (email.ts now throws on {error}) lands here, so
+      // control never reaches the status:'sent' update at the end of the try —
+      // the invoice stays unsent and the point is refunded below.
       console.error('Send pipeline failed, refunding point:', err);
       if (!isUnlimited) {
-        await supabase.rpc('add_invoice_points', { p_user_id: user.id, p_points: 1 });
+        // Refund via service role (RPC is revoked from authenticated).
+        await getSupabaseAdmin().rpc('add_invoice_points', { p_user_id: user.id, p_points: 1 });
       }
       return NextResponse.json({
         error: 'Failed to send invoice. Your point has been refunded.',

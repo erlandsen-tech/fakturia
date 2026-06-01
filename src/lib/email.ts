@@ -47,13 +47,24 @@ export async function sendInvoiceEmail(input: SendInvoiceEmailInput) {
     });
   }
 
-  return getResend().emails.send({
+  // The Resend SDK RESOLVES to { data, error } — it does NOT reject on
+  // API/validation errors (unverified domain, bad recipient, 4xx/5xx). It only
+  // rejects on network faults. So we must inspect `error` and throw, otherwise
+  // a failed send looks successful to callers and a paid point is consumed for
+  // an email that never went out.
+  const { data, error } = await getResend().emails.send({
     from,
     to: input.to,
     subject,
     html,
     attachments,
   });
+
+  if (error) {
+    throw new Error(`Resend send failed: ${error.message ?? JSON.stringify(error)}`);
+  }
+
+  return data;
 }
 
 function escapeHtml(s: string): string {
