@@ -178,12 +178,12 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm(t('Are you sure you want to delete this invoice? This action cannot be undone.'))) {
+    if (!confirm(t('Er du sikker på at du vil slette denne kladden? Dette kan ikke angres.'))) {
       return;
     }
-    
+
     setDeleting(true);
-    
+
     try {
       const response = await fetch(`/api/invoices/${invoice.id}`, {
         method: 'DELETE',
@@ -194,11 +194,12 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
         throw new Error(error.error || 'Failed to delete invoice');
       }
 
-      toast.success(t('Invoice deleted successfully'));
+      toast.success(t('Faktura slettet'));
       router.push('/invoices');
     } catch (error) {
       console.error('Error deleting invoice:', error);
-      toast.error(t('Failed to delete invoice'));
+      // Surface the server-side reason (e.g. the §13 retention 409 message).
+      toast.error(error instanceof Error ? error.message : t('Failed to delete invoice'));
     } finally {
       setDeleting(false);
     }
@@ -212,6 +213,9 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   // Check if invoice can be sent (draft, sent, overdue all allow sending — paid/cancelled don't)
   const canSendInvoice = formData.status !== 'paid' && formData.status !== 'cancelled';
   const sendButtonLabel = formData.status === 'draft' ? t('Send Invoice') : t('Send på nytt');
+
+  // §13: only un-issued drafts may be deleted. Issued invoices must be retained.
+  const canDelete = formData.status === 'draft';
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -302,14 +306,16 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
               {saving ? t('Saving...') : t('Save Changes')}
             </Button>
             
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              <Trash className="h-4 w-4 mr-2" />
-              {deleting ? t('Deleting...') : t('Delete')}
-            </Button>
+            {canDelete && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                <Trash className="h-4 w-4 mr-2" />
+                {deleting ? t('Deleting...') : t('Delete')}
+              </Button>
+            )}
           </div>
         </div>
       </div>

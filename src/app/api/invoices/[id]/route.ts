@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchUserRecord, updateUserRecord, deleteUserRecord, getAuthenticatedUser } from '@/lib/auth';
+import { fetchUserRecord, updateUserRecord, getAuthenticatedUser } from '@/lib/auth';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { updateInvoiceSchema } from '@/lib/validations/invoice';
@@ -366,19 +366,60 @@ export async function PATCH(
   }
 }
 
+// bokføringsloven §13: only un-issued drafts may be removed, and even then we
+// soft-delete (set deleted_at via the soft_delete_invoice RPC) rather than
+// physically DELETE. Issued invoices must be retained 5 years and keep their
+// place in the gap-free invoice_number series.
+const RETENTION_MESSAGE =
+  'Bare kladd-fakturaer kan slettes. Utstedte fakturaer må beholdes i 5 år (bokføringsloven §13).';
+
 /**
- * DELETE /api/invoices/[id] - Delete invoice with ownership verification
+ * DELETE /api/invoices/[id] - Soft-delete a draft invoice (ownership + §13 guard)
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    await deleteUserRecord('invoices', params.id);
+    const supabase = await createClient();
 
-    return NextResponse.json({ 
-      message: 'Invoice deleted successfully' 
+    // Friendly 404 if the invoice does not exist or is not owned by the caller.
+    const invoice = await fetchUserRecord<{ status: string }>(
+      'invoices',
+      params.id,
+      'status'
+    );
+    if (!invoice) {
+      return NextResponse.json({ error: 'Faktura ikke funnet' }, { status: 404 });
+    }
+
+    if (invoice.status !== 'draft') {
+      return NextResponse.json({ error: RETENTION_MESSAGE }, { status: 409 });
+    }
+
+    const { data, error } = await supabase.rpc('soft_delete_invoice', {
+      p_invoice_id: params.id,
     });
+
+    if (error) {
+      console.error('Error soft-deleting invoice:', error);
+      return NextResponse.json(
+        { error: 'Failed to delete invoice' },
+        { status: 500 }
+      );
+    }
+
+    if (data?.ok === false) {
+      if (data.error === 'not_draft') {
+        return NextResponse.json({ error: RETENTION_MESSAGE }, { status: 409 });
+      }
+      if (data.error === 'not_found') {
+        return NextResponse.json({ error: 'Faktura ikke funnet' }, { status: 404 });
+      }
+      return NextResponse.json({ error: 'Failed to delete invoice' }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: 'Faktura slettet' });
   } catch (error) {
     console.error('Error deleting invoice:', error);
     

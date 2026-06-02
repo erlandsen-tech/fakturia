@@ -217,7 +217,15 @@ export default function LandingPage() {
           <Wordmark size={1.4} inverted />
           <div className="mt-3 text-xs">{t("footer.tagline")}</div>
         </div>
-        <div className="text-xs">
+        <div className="text-xs flex flex-col items-start md:items-end gap-2">
+          <div className="flex gap-4">
+            <Link href="/personvern" className="hover:text-ink-mute/80 underline">
+              {t("footer.privacy")}
+            </Link>
+            <Link href="/vilkar" className="hover:text-ink-mute/80 underline">
+              {t("footer.terms")}
+            </Link>
+          </div>
           <span>Org.nr 925 100 200</span>
         </div>
       </footer>

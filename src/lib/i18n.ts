@@ -63,6 +63,8 @@ const dict: Record<Locale, Record<string, string>> = {
     "pricing.freeNote": "3 fakturaer gratis ved registrering. Ingen abonnement, ingen binding.",
 
     "footer.tagline": "Lagd på Nesodden med uvanlig mye omsorg.",
+    "footer.privacy": "Personvern",
+    "footer.terms": "Vilkår",
 
     // Existing form / app strings (preserved from previous dictionary)
     "VAT Number": "Mva.-nummer",
@@ -305,6 +307,8 @@ const dict: Record<Locale, Record<string, string>> = {
     "pricing.freeNote": "3 invoices free on sign-up. No subscription, no lock-in.",
 
     "footer.tagline": "Made on Nesodden with unusual care.",
+    "footer.privacy": "Privacy",
+    "footer.terms": "Terms",
   },
 };
 
