@@ -22,12 +22,12 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.heroLineB":         "kom deg",
     "landing.heroEm2":           "ut",
     "landing.heroSub":
-      "Fakturio er et fakturaverktøy for folk som heller vil holde på med arbeidet sitt. Lag fakturaen, send PDF-en, last ned EHF-XML. Ferdig.",
+      "Fakturio er et fakturaverktøy for folk som heller vil holde på med arbeidet sitt. Lag fakturaen, send den til kunden, behold oversikten. Ferdig.",
     "landing.ctaPrimary":        "Start gratis",
     "landing.ctaSecondary":      "Se prisene",
 
     "landing.heroBullet1":       "3 fakturaer gratis",
-    "landing.heroBullet2":       "PDF + EHF / PEPPOL",
+    "landing.heroBullet2":       "Kunder og fakturaer samlet",
     "landing.heroBullet3":       "Norsk MVA-håndtering",
     "landing.heroBullet4":       "Laget på Nesodden",
 
@@ -37,16 +37,16 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.manifestoB":        ", ikke to timer hver søndag kveld.",
 
     "landing.value1Title":       "Send på 60 sekunder",
-    "landing.value1Body":        "Velg kunden, skriv linjene, trykk send. Fakturaen er på vei før kaffen er kald.",
-    "landing.value2Title":       "Klar for Norge",
-    "landing.value2Body":        "Organisasjonsnummer, MVA, KID og bankkonto. Alt det norske håndverket en faktura krever, fylt inn riktig første gang.",
-    "landing.value3Title":       "EHF inkludert",
-    "landing.value3Body":        "Last ned EHF 3.0 XML fra hver faktura, validert mot PEPPOL BIS Billing 3.0. Klar for offentlige innkjøp og store kunder.",
+    "landing.value1Body":        "Velg kunden, skriv linjene, trykk send. Fakturaen går rett til kundens innboks før kaffen er kald.",
+    "landing.value2Title":       "Full oversikt",
+    "landing.value2Body":        "Kunder, produkter og fakturaer samlet på ett sted. Se hva som er sendt og hvem som har betalt — uten å lete i e-poster og regneark.",
+    "landing.value3Title":       "Klar for Norge",
+    "landing.value3Body":        "Organisasjonsnummer, MVA, KID og bankkonto. Alt det norske håndverket en faktura krever, fylt inn riktig første gang.",
 
     "landing.ehfEyebrow":        "Snart · BankID, Vipps, EHF-utsending",
-    "landing.ehfQuote":          "PDF og EHF-XML i dag. Resten kommer.",
+    "landing.ehfQuote":          "Bygget for å vokse med deg.",
     "landing.ehfBody":
-      "Du laster allerede ned hver faktura som PDF og som validert EHF 3.0 / PEPPOL BIS Billing 3.0 XML — klar til innsending. Direkte EHF-utsending, BankID-signering og Vipps-betaling står for tur.",
+      "I dag sender du fakturaen på e-post og holder all oversikten på ett sted. Snart kommer direkte EHF-utsending over PEPPOL, BankID-signering og Vipps-betaling.",
 
     "landing.pricingEyebrow":    "Pris",
     "landing.pricingTitle":      "Betal når du sender. Ingen binding.",
@@ -266,12 +266,12 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.heroLineB":         "go",
     "landing.heroEm2":           "outside",
     "landing.heroSub":
-      "Fakturio is invoicing for people who'd rather get on with the work. Draft the invoice, send the PDF, download the EHF XML. Done.",
+      "Fakturio is invoicing for people who'd rather get on with the work. Draft the invoice, send it to your client, keep the overview. Done.",
     "landing.ctaPrimary":        "Start free",
     "landing.ctaSecondary":      "See pricing",
 
     "landing.heroBullet1":       "3 invoices free",
-    "landing.heroBullet2":       "PDF + EHF / PEPPOL",
+    "landing.heroBullet2":       "Clients and invoices together",
     "landing.heroBullet3":       "Norwegian VAT built in",
     "landing.heroBullet4":       "Made on Nesodden",
 
@@ -281,16 +281,16 @@ const dict: Record<Locale, Record<string, string>> = {
     "landing.manifestoB":        ", not two hours every Sunday night.",
 
     "landing.value1Title":       "Send in 60 seconds",
-    "landing.value1Body":        "Pick the client, write the lines, hit send. The invoice is on its way before your coffee gets cold.",
-    "landing.value2Title":       "Ready for Norway",
-    "landing.value2Body":        "Org number, VAT, KID and bank account. All the Norwegian craft an invoice needs, filled in right the first time.",
-    "landing.value3Title":       "EHF included",
-    "landing.value3Body":        "Download EHF 3.0 XML from every invoice, validated against PEPPOL BIS Billing 3.0. Ready for public-sector and large buyers.",
+    "landing.value1Body":        "Pick the client, write the lines, hit send. The invoice lands in your client's inbox before your coffee gets cold.",
+    "landing.value2Title":       "Full overview",
+    "landing.value2Body":        "Clients, products and invoices in one place. See what's been sent and who's paid — without digging through emails and spreadsheets.",
+    "landing.value3Title":       "Ready for Norway",
+    "landing.value3Body":        "Org number, VAT, KID and bank account. All the Norwegian craft an invoice needs, filled in right the first time.",
 
     "landing.ehfEyebrow":        "Coming soon · BankID, Vipps, EHF sending",
-    "landing.ehfQuote":          "PDF and EHF XML today. The rest is on the way.",
+    "landing.ehfQuote":          "Built to grow with you.",
     "landing.ehfBody":
-      "You already download every invoice as PDF and as validated EHF 3.0 / PEPPOL BIS Billing 3.0 XML — ready for submission. Direct EHF sending, BankID signing and Vipps payment are next up.",
+      "Today you send the invoice by email and keep everything in one place. Direct EHF sending over PEPPOL, BankID signing and Vipps payment are on the way.",
 
     "landing.pricingEyebrow":    "Pricing",
     "landing.pricingTitle":      "Pay when you send. No subscription.",

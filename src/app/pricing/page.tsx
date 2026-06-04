@@ -62,7 +62,7 @@ export default function PricingPage() {
             Enkel pris, ingen binding
           </h1>
           <p className="text-lg text-slate-600">
-            Kjøp fakturaer når du trenger dem, eller abonner for ubegrenset.
+            Kjøp fakturaer når du trenger dem. Betal kun for det du sender.
           </p>
         </div>
 
@@ -92,7 +92,7 @@ export default function PricingPage() {
         <p className="text-center text-sm text-slate-500 mt-12">
           Betal per faktura. Ingen abonnement, ingen binding. Alle priser er eks. mva.
           <br />
-          Kvittering sendes automatisk til e-posten din etter betaling.
+          Betaling skjer trygt via Stripe.
         </p>
       </div>
     </main>

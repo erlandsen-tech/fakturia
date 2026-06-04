@@ -143,7 +143,7 @@ export default async function PublicInvoicePage({ params }: PageProps) {
             <em>{inv.sender_name || "Avsenderen"}</em> har sendt deg en faktura.
           </h1>
           <p className="text-[15px] text-ink-2 mt-4 leading-[1.6] max-w-[480px]">
-            Betalingsdetaljene finner du til høyre. Bruk KID-nummeret når du betaler, så blir fakturaen registrert automatisk.
+            Betalingsdetaljene finner du til høyre. Husk å oppgi KID-nummeret når du betaler, så blir betalingen lett å spore.
           </p>
           <div className="flex flex-wrap gap-9 mt-8 mb-8">
             <div>
@@ -251,7 +251,7 @@ export default async function PublicInvoicePage({ params }: PageProps) {
 
       <footer className="flex justify-between items-center px-6 md:px-10 py-6 border-t border-ink/10 bg-paper-2">
         <div className="flex items-center gap-2.5 text-xs text-ink-3">
-          <Mark size={20} /> Sendt med Fakturio · Trygt og bokført
+          <Mark size={20} /> Sendt med Fakturio · Trygt og sporbart
         </div>
         <div className="font-mono text-[11px] text-ink-mute">
           fakturio.no/i/{params.token}

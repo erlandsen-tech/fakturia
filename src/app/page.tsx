@@ -116,7 +116,7 @@ export default function LandingPage() {
         ))}
       </section>
 
-      {/* EHF / PEPPOL */}
+      {/* ROADMAP — what's coming next */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 px-6 lg:px-12 py-20 items-center max-w-7xl mx-auto">
         <div>
           <div className="cap text-clay mb-4">{t("landing.ehfEyebrow")}</div>
