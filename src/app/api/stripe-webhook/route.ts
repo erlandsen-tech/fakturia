@@ -141,6 +141,13 @@ export async function POST(request: Request) {
         console.log(`Added ${invoicesToAdd} invoice points for user ${userId} (pack: ${session.metadata?.pack})`);
 
       } else if (checkoutType === 'subscription') {
+        // Subscriptions are not a live product. Even if a stray subscription
+        // session somehow reaches us, refuse to flip a profile to an "active"
+        // tier — that would re-open the unlimited free-send bypass. Gated behind
+        // the same ENABLE_SUBSCRIPTIONS flag as the checkout route.
+        if (process.env.ENABLE_SUBSCRIPTIONS !== 'true') {
+          return await acknowledgeUnprocessable('Subscriptions are disabled');
+        }
         // Subscription activation — set tier
         const tier = session.metadata?.tier || 'starter';
         const { error } = await supabaseAdmin

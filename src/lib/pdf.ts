@@ -26,6 +26,8 @@ export interface LegacyInvoicePDFData {
     logoUrl?: string;
     slogan?: string;
     bankAccount?: string;
+    vatRegistered?: boolean;
+    vatNumber?: string;
   };
   client: {
     name: string;
@@ -69,6 +71,8 @@ export function adaptLegacyInvoicePdfData(d: LegacyInvoicePDFData): InvoicePDFPr
         org_no: d.company.orgNumber,
         email: d.company.email,
         phone: d.company.phone,
+        vat_registered: d.company.vatRegistered ?? false,
+        vat_number: d.company.vatNumber,
       },
       recipient: {
         name: d.client.name,
@@ -83,7 +87,13 @@ export function adaptLegacyInvoicePdfData(d: LegacyInvoicePDFData): InvoicePDFPr
         unit: it.unit,
         unit_price: it.unitPrice,
         vat_rate: it.vat,
+        amount: it.amount,
       })),
+      totals: {
+        subtotal: d.invoice.subtotal,
+        vat: d.invoice.vat,
+        total: d.invoice.total,
+      },
       payment: {
         account: d.company.bankAccount ?? "",
       },

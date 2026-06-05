@@ -8,16 +8,26 @@
  * everything is escaped through `xe()` before interpolation.
  */
 
+import { computeInvoiceTotals } from './money';
+
 const CUSTOMIZATION_ID = 'urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0';
 const PROFILE_ID = 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0';
 const INVOICE_TYPE_COMMERCIAL = '380';
 const PAYMENT_MEANS_CREDIT_TRANSFER = '30';
 const PEPPOL_SCHEME_NO_ORG = '0192'; // Norwegian Organisation Number
 
+// EN16931 category 'E' (exempt) requires a human-readable exemption reason
+// (BT-120). Default text for a Norwegian seller below the MVA threshold.
+const DEFAULT_TAX_EXEMPTION_REASON = 'Selger er ikke registrert i Merverdiavgiftsregisteret';
+
 export interface EhfCompany {
   name: string;
   org_number?: string | null;
   vat_number?: string | null;       // e.g. "NO999888777MVA"
+  // True only when registered in the Merverdiavgiftsregisteret. Drives whether
+  // lines use category 'S' (with a seller VAT id) or 'E' (exempt, no VAT id).
+  vat_registered?: boolean | null;
+  tax_exemption_reason?: string | null; // BT-120 text used for category 'E'
   address_line1?: string | null;
   address_line2?: string | null;
   postal_code?: string | null;
@@ -99,10 +109,18 @@ function peppolEndpoint(endpoint: string | null | undefined, orgNumber: string |
   return null;
 }
 
-/** Returns the EN16931 tax category code for a given rate. */
-function taxCategory(rate: number): 'S' | 'Z' | 'E' {
+/**
+ * Returns the EN16931 tax category code for a line.
+ *
+ * A seller NOT registered for VAT must use 'E' (exempt) — BR-S-02 forbids
+ * category 'S' unless the seller carries a VAT identifier, which a
+ * non-registered seller does not have. A registered seller uses 'S' for
+ * positive rates and 'Z' (zero-rated) for an explicit 0% line.
+ */
+function taxCategory(rate: number, sellerVatRegistered: boolean): 'S' | 'Z' | 'E' {
+  if (!sellerVatRegistered) return 'E';
   if (rate > 0) return 'S';
-  return 'Z'; // zero-rated; "E" (exempt) requires a tax exemption reason
+  return 'Z';
 }
 
 function validate(invoice: EhfInvoice, company: EhfCompany, client: EhfClient): void {
@@ -113,6 +131,8 @@ function validate(invoice: EhfInvoice, company: EhfCompany, client: EhfClient): 
   if (!company.city) missing.push('company.city');
   if (!company.postal_code) missing.push('company.postal_code');
   if (!company.bank_account) missing.push('company.bank_account');
+  // A VAT-registered seller emitting category 'S' MUST carry a VAT id (BR-S-02).
+  if (company.vat_registered && !company.vat_number) missing.push('company.vat_number');
   if (!client.name) missing.push('client.name');
   if (!client.org_number) missing.push('client.org_number');
   if (!client.address_line1) missing.push('client.address_line1');
@@ -188,31 +208,44 @@ export function buildEhfInvoice(input: {
   validate(invoice, company, client);
 
   const currency = (invoice.currency || 'NOK').toUpperCase();
+  const sellerVatRegistered = !!company.vat_registered;
+  const exemptionReason = company.tax_exemption_reason || DEFAULT_TAX_EXEMPTION_REASON;
 
-  // Per-line totals.
-  type Computed = EhfLine & { line_amount: number; tax_amount: number; line_no: number };
-  const computed: Computed[] = invoice.lines.map((l, i) => {
-    const line_amount = l.quantity * l.unit_price;
-    return {
-      ...l,
-      line_amount,
-      tax_amount: line_amount * (l.vat_rate / 100),
-      line_no: i + 1,
-    };
-  });
+  // Single rounding pass in integer øre, shared with the DB and PDF so all three
+  // agree exactly (sum of line tax === document tax, satisfying EN16931 rounding).
+  const totals = computeInvoiceTotals(
+    invoice.lines.map((l) => ({ quantity: l.quantity, unit_price: l.unit_price, vat_rate: l.vat_rate })),
+    sellerVatRegistered,
+  );
+  const oreStr = (ore: number) => (ore / 100).toFixed(2);
 
-  const lineTotal = computed.reduce((s, l) => s + l.line_amount, 0);
-  const taxTotal = computed.reduce((s, l) => s + l.tax_amount, 0);
-  const payable = lineTotal + taxTotal;
+  type Computed = EhfLine & {
+    line_no: number;
+    cat: 'S' | 'Z' | 'E';
+    effectiveRate: number;
+    amountOre: number;
+    taxOre: number;
+  };
+  const computed: Computed[] = invoice.lines.map((l, i) => ({
+    ...l,
+    line_no: i + 1,
+    cat: taxCategory(l.vat_rate, sellerVatRegistered),
+    effectiveRate: totals.lines[i].effectiveRate,
+    amountOre: totals.lines[i].amountOre,
+    taxOre: totals.lines[i].vatAmountOre,
+  }));
 
-  // Group by (rate, category) for cac:TaxSubtotal.
-  const groups = new Map<string, { rate: number; cat: string; taxable: number; tax: number }>();
+  const lineTotalOre = totals.subtotalOre;
+  const taxTotalOre = totals.vatOre;
+  const payableOre = totals.totalOre;
+
+  // Group by (category, effective rate) for cac:TaxSubtotal.
+  const groups = new Map<string, { rate: number; cat: 'S' | 'Z' | 'E'; taxableOre: number; taxOre: number }>();
   for (const l of computed) {
-    const cat = taxCategory(l.vat_rate);
-    const key = `${cat}:${l.vat_rate}`;
-    const g = groups.get(key) ?? { rate: l.vat_rate, cat, taxable: 0, tax: 0 };
-    g.taxable += l.line_amount;
-    g.tax += l.tax_amount;
+    const key = `${l.cat}:${l.effectiveRate}`;
+    const g = groups.get(key) ?? { rate: l.effectiveRate, cat: l.cat, taxableOre: 0, taxOre: 0 };
+    g.taxableOre += l.amountOre;
+    g.taxOre += l.taxOre;
     groups.set(key, g);
   }
 
@@ -224,7 +257,9 @@ export function buildEhfInvoice(input: {
     legalName: company.name,
     partyName: company.name,
     orgNumber: company.org_number,
-    vatNumber: company.vat_number,
+    // Only a genuinely VAT-registered seller emits a VAT id. A non-registered
+    // seller must NOT (category 'E' + no PartyTaxScheme avoids BR-S-02).
+    vatNumber: sellerVatRegistered ? company.vat_number : null,
     address1: company.address_line1,
     address2: company.address_line2,
     postal: company.postal_code,
@@ -251,27 +286,34 @@ export function buildEhfInvoice(input: {
     email: client.email,
   });
 
-  const subtotalXml = Array.from(groups.values()).map((g) => `
+  const subtotalXml = Array.from(groups.values()).map((g) => {
+    // EN16931 element order inside cac:TaxCategory: ID, Percent,
+    // TaxExemptionReason, TaxScheme. Reason is required for category 'E'.
+    const exemptionXml = g.cat === 'E'
+      ? `\n        <cbc:TaxExemptionReason>${xe(exemptionReason)}</cbc:TaxExemptionReason>`
+      : '';
+    return `
     <cac:TaxSubtotal>
-      <cbc:TaxableAmount currencyID="${currency}">${n2(g.taxable)}</cbc:TaxableAmount>
-      <cbc:TaxAmount currencyID="${currency}">${n2(g.tax)}</cbc:TaxAmount>
+      <cbc:TaxableAmount currencyID="${currency}">${oreStr(g.taxableOre)}</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="${currency}">${oreStr(g.taxOre)}</cbc:TaxAmount>
       <cac:TaxCategory>
         <cbc:ID>${g.cat}</cbc:ID>
-        <cbc:Percent>${n2(g.rate)}</cbc:Percent>
+        <cbc:Percent>${n2(g.rate)}</cbc:Percent>${exemptionXml}
         <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
       </cac:TaxCategory>
-    </cac:TaxSubtotal>`).join('');
+    </cac:TaxSubtotal>`;
+  }).join('');
 
   const linesXml = computed.map((l) => `
   <cac:InvoiceLine>
     <cbc:ID>${l.line_no}</cbc:ID>
     <cbc:InvoicedQuantity unitCode="${xe(l.unit_code || 'C62')}">${n2(l.quantity)}</cbc:InvoicedQuantity>
-    <cbc:LineExtensionAmount currencyID="${currency}">${n2(l.line_amount)}</cbc:LineExtensionAmount>
+    <cbc:LineExtensionAmount currencyID="${currency}">${oreStr(l.amountOre)}</cbc:LineExtensionAmount>
     <cac:Item>
       <cbc:Name>${xe(l.description)}</cbc:Name>
       <cac:ClassifiedTaxCategory>
-        <cbc:ID>${taxCategory(l.vat_rate)}</cbc:ID>
-        <cbc:Percent>${n2(l.vat_rate)}</cbc:Percent>
+        <cbc:ID>${l.cat}</cbc:ID>
+        <cbc:Percent>${n2(l.effectiveRate)}</cbc:Percent>
         <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
       </cac:ClassifiedTaxCategory>
     </cac:Item>
@@ -309,13 +351,13 @@ export function buildEhfInvoice(input: {
     </cac:PayeeFinancialAccount>
   </cac:PaymentMeans>
   <cac:TaxTotal>
-    <cbc:TaxAmount currencyID="${currency}">${n2(taxTotal)}</cbc:TaxAmount>${subtotalXml}
+    <cbc:TaxAmount currencyID="${currency}">${oreStr(taxTotalOre)}</cbc:TaxAmount>${subtotalXml}
   </cac:TaxTotal>
   <cac:LegalMonetaryTotal>
-    <cbc:LineExtensionAmount currencyID="${currency}">${n2(lineTotal)}</cbc:LineExtensionAmount>
-    <cbc:TaxExclusiveAmount currencyID="${currency}">${n2(lineTotal)}</cbc:TaxExclusiveAmount>
-    <cbc:TaxInclusiveAmount currencyID="${currency}">${n2(payable)}</cbc:TaxInclusiveAmount>
-    <cbc:PayableAmount currencyID="${currency}">${n2(payable)}</cbc:PayableAmount>
+    <cbc:LineExtensionAmount currencyID="${currency}">${oreStr(lineTotalOre)}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="${currency}">${oreStr(lineTotalOre)}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="${currency}">${oreStr(payableOre)}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="${currency}">${oreStr(payableOre)}</cbc:PayableAmount>
   </cac:LegalMonetaryTotal>${linesXml}
 </Invoice>
 `;

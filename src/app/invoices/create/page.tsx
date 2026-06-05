@@ -116,6 +116,12 @@ export default function CreateInvoicePage() {
         console.error('Error loading company settings:', error);
       } else {
         setCompanySettings(data);
+        // A non-VAT-registered seller must not charge MVA. Drive the default rate
+        // to 0 (the create route also enforces this server-side regardless).
+        if (data && data.vat_registered === false) {
+          setFormData((prev) => ({ ...prev, vat_rate: 0 }));
+          setItems((prev) => prev.map((it) => ({ ...it, vat_rate: 0, vat_amount: 0 })));
+        }
       }
     };
 
@@ -454,6 +460,11 @@ export default function CreateInvoicePage() {
                 value={formData.vat_rate}
                 onChange={(e) => setFormData({ ...formData, vat_rate: parseFloat(e.target.value) || 0 })}
               />
+              {companySettings && companySettings.vat_registered === false && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('Du er ikke MVA-registrert — fakturalinjer settes til 0% MVA.')}
+                </p>
+              )}
             </div>
           </div>
 

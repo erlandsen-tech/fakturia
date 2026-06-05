@@ -13,7 +13,12 @@ const BUNDLE_PACKS: Record<string, { invoices: number; amount: number; label: st
   'pack_25': { invoices: 25, amount: 19900, label: '25-faktura pakke' },
 };
 
-// Subscription price IDs (set these in Stripe Dashboard)
+// Subscriptions are not a live product — Fakturio sells one-off packs only.
+// The branch below is gated behind ENABLE_SUBSCRIPTIONS so {type:'subscription'}
+// cannot reach Stripe in production (and cannot flip a profile to an "active"
+// tier that the send path would treat as unlimited). Set the env var to 'true'
+// only once a real Stripe subscription product exists.
+const SUBSCRIPTIONS_ENABLED = process.env.ENABLE_SUBSCRIPTIONS === 'true';
 const SUBSCRIPTION_PRICES: Record<string, string> = {
   starter: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter',
   growth: process.env.STRIPE_GROWTH_PRICE_ID || 'price_growth',
@@ -68,8 +73,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: session.url });
   }
 
-  // Subscription
+  // Subscription (disabled in production — see SUBSCRIPTIONS_ENABLED above)
   if (type === 'subscription') {
+    if (!SUBSCRIPTIONS_ENABLED) {
+      return NextResponse.json({ error: 'Subscriptions are not available.' }, { status: 404 });
+    }
     const priceId = SUBSCRIPTION_PRICES[body.tier];
     if (!priceId) {
       return NextResponse.json({ error: 'Invalid tier. Use: starter, growth, enterprise' }, { status: 400 });
