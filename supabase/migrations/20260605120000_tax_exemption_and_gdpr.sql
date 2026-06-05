@@ -4,10 +4,17 @@
 --    'E' lines for sellers below the MVA threshold.
 -- 2. profiles.deleted_at / anonymized_at — account-erasure markers.
 -- 3. export_user_data()      — GDPR Art.15 data portability.
--- 4. anonymize_user_account() — GDPR Art.17 erasure that ANONYMIZES retained
---    invoices rather than deleting them (bokføringsloven §13 requires ~5-year
---    retention; Art.17(3)(b) lets the retention obligation override erasure for
---    the data needed to satisfy it).
+-- 4. anonymize_user_account() — GDPR Art.17 erasure. Bokføringsloven §13 +
+--    bokføringsforskriften require sales documents to be retained COMPLETE and
+--    UNALTERED for ~5 years; mutating a stored accounting record (or stripping
+--    the buyer identity it must carry) would itself breach that. Art.17(3)(b)
+--    exempts data held under a legal retention obligation from erasure, so we do
+--    NOT touch clients or invoices here. We "lock" the account: ban login (done
+--    by the API route), mark the profile erased, and scrub only the seller's own
+--    contact fields that the invoice does not legally require (email, phone,
+--    website, notes). The seller's legal identity on retained invoices
+--    (company_name, organization_number, address, vat_number, bank_account) is
+--    kept. A separate post-retention purge job (Phase 6) hard-deletes after 5y.
 --
 -- Both RPCs are SECURITY DEFINER but verify auth.uid() = p_user_id internally,
 -- pin search_path, and follow the secure_invoice_share (20260510120000) ACL
@@ -75,7 +82,7 @@ revoke all on function public.export_user_data(uuid) from public;
 grant execute on function public.export_user_data(uuid) to authenticated;
 
 -- ----------------------------------------------------------------------------
--- 4. GDPR Art.17 — erase by anonymization (retained invoices kept)
+-- 4. GDPR Art.17 — lock the account; retain the books unaltered
 -- ----------------------------------------------------------------------------
 create or replace function public.anonymize_user_account(p_user_id uuid)
 returns jsonb
@@ -85,61 +92,32 @@ set search_path = public
 as $$
 declare
   v_uid uuid := auth.uid();
-  v_clients integer;
   v_invoices integer;
 begin
   if v_uid is null or v_uid <> p_user_id then
     raise exception 'not authorized';
   end if;
 
-  -- Clients are not a retained accounting document: scrub all PII and
-  -- soft-delete them.
-  update public.clients
-     set name           = 'Anonymisert',
-         email          = 'anonymisert@example.invalid',
-         phone          = null,
-         company        = null,
-         org_number     = null,
-         vat_number     = null,
-         address_line1  = null,
-         address_line2  = null,
-         postal_code    = null,
-         city           = null,
-         peppol_endpoint = null,
-         deleted_at     = coalesce(deleted_at, now()),
-         updated_at     = now()
-   where user_id = p_user_id::text;
-  get diagnostics v_clients = row_count;
+  -- Clients and invoices are NOT touched: they are part of the retained
+  -- accounting record (bokføringsloven §13) and must stay complete and
+  -- unaltered. Art.17(3)(b) exempts them from erasure until the retention period
+  -- expires, after which a separate purge job removes them.
+  select count(*) into v_invoices from public.invoices where user_id = p_user_id::text;
 
-  -- Invoices MUST be retained (bokføringsloven §13), so we anonymize instead of
-  -- deleting: financial fields (amounts, dates, invoice_number) are kept, while
-  -- free-text fields that may carry personal data are cleared. The buyer's
-  -- identity is already anonymized via the clients FK above.
-  update public.invoices
-     set notes             = null,
-         delivery_place    = null,
-         buyer_reference   = null,
-         payment_reference = null,
-         updated_at        = now()
-   where user_id = p_user_id::text;
-  get diagnostics v_invoices = row_count;
-
-  -- Company settings: scrub the seller's contact PII. The legally-required
-  -- seller identification on retained invoices (company_name, organization_
-  -- number, address) is preserved per GDPR Art.17(3)(b).
+  -- Scrub only the seller's own contact fields that the invoice does not legally
+  -- require. Legal seller identity (company_name, organization_number, address,
+  -- vat_number, bank_account) is kept so retained invoices remain valid.
   update public.company_settings
-     set email        = 'anonymisert@example.invalid',
-         phone        = null,
-         website      = null,
-         bank_account = null,
-         vat_number   = null,
-         notes        = null,
-         updated_at   = now()
+     set email      = 'anonymisert@example.invalid',
+         phone      = null,
+         website    = null,
+         notes      = null,
+         updated_at = now()
    where user_id = p_user_id;
 
-  -- Mark the profile erased. The auth.users row itself is banned (not deleted)
-  -- by the API route, because profiles/company_settings cascade from it and must
-  -- survive for invoice retention.
+  -- Mark the profile erased (the "lock"). The auth.users row is banned (not
+  -- deleted) by the API route, because profiles/company_settings cascade from it
+  -- and must survive for invoice retention.
   update public.profiles
      set anonymized_at = now(),
          deleted_at    = now(),
@@ -147,10 +125,10 @@ begin
    where id = p_user_id;
 
   insert into public.audit_log (user_id, action, resource_type, resource_id, details)
-  values (p_user_id, 'account.anonymize', 'profile', p_user_id,
-          jsonb_build_object('clients_scrubbed', v_clients, 'invoices_retained', v_invoices));
+  values (p_user_id, 'account.erase_lock', 'profile', p_user_id,
+          jsonb_build_object('invoices_retained', v_invoices));
 
-  return jsonb_build_object('ok', true, 'clients_scrubbed', v_clients, 'invoices_retained', v_invoices);
+  return jsonb_build_object('ok', true, 'invoices_retained', v_invoices);
 end;
 $$;
 

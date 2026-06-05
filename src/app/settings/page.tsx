@@ -203,8 +203,9 @@ export default function SettingsPage() {
   const handleDeleteAccount = async () => {
     const ok = window.confirm(
       'Er du sikker på at du vil slette kontoen din?\n\n' +
-      'Personopplysningene dine anonymiseres. Fakturaer beholdes anonymt i 5 år ' +
-      'som loven krever (bokføringsloven §13). Dette kan ikke angres.',
+      'Innloggingen sperres og kontoen låses. Fakturaene dine beholdes uendret i ' +
+      '5 år som loven krever (bokføringsloven §13), og slettes deretter. ' +
+      'Dette kan ikke angres.',
     );
     if (!ok) return;
 
@@ -466,7 +467,7 @@ export default function SettingsPage() {
             <div className="max-w-xl">
               <h3 className="font-medium text-red-900">{t('Slett konto')}</h3>
               <p className="text-sm text-red-700">
-                {t('Personopplysningene dine anonymiseres. Fakturaer beholdes anonymt i 5 år iht. bokføringsloven §13. Dette kan ikke angres.')}
+                {t('Innloggingen sperres og kontoen låses. Fakturaene dine beholdes uendret i 5 år iht. bokføringsloven §13, og slettes deretter. Dette kan ikke angres.')}
               </p>
             </div>
             <Button

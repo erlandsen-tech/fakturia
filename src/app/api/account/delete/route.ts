@@ -16,12 +16,13 @@ function getSupabaseAdmin() {
  * GDPR Art.17 erasure. Requires explicit confirmation in the body:
  *   { "confirm": "SLETT" }
  *
- * anonymize_user_account() scrubs the user's PII and anonymizes (does NOT
- * delete) invoices that bokføringsloven §13 requires us to retain ~5 years.
- * Afterwards we BAN — but do not hard-delete — the auth.users row: profiles and
- * company_settings cascade from it and must survive for the retained invoices,
- * so a CASCADE delete would breach the retention obligation. Banning prevents
- * any further sign-in while keeping the anonymized records intact.
+ * anonymize_user_account() locks the account: it marks the profile erased and
+ * scrubs the seller's own non-required contact fields, but leaves clients and
+ * invoices UNALTERED — bokføringsloven §13 requires those to be retained
+ * complete for ~5 years (GDPR Art.17(3)(b)). Afterwards we BAN — but do not
+ * hard-delete — the auth.users row: profiles and company_settings cascade from
+ * it and must survive for the retained invoices, so a CASCADE delete would
+ * breach the retention obligation. Banning prevents any further sign-in.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     await supabase.auth.signOut();
 
     return NextResponse.json({
-      message: 'Kontoen din er slettet. Personopplysninger er anonymisert; fakturaer beholdes anonymt i 5 år iht. bokføringsloven.',
+      message: 'Kontoen din er slettet og innlogging er sperret. Fakturaene dine beholdes uendret i 5 år som loven krever (bokføringsloven §13), og slettes deretter.',
       data,
     });
   } catch (error) {
