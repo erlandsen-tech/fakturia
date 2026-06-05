@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Link from 'next/link';
 import { Plus, Trash2, Save, Send, Coins, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Client, InvoiceStatus, Profile } from '@/types/database';
+import type { Client, InvoiceStatus, Profile, Product } from '@/types/database';
 import { t } from '@/lib/i18n';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { ChecksCard } from '@/components/invoices/ChecksCard';
@@ -33,6 +33,7 @@ export default function CreateInvoicePage() {
   const supabase = createClient();
 
   const [clients, setClients] = useState<Client[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [companySettings, setCompanySettings] = useState<any>(null);
   const [formData, setFormData] = useState({
     client_id: '',
@@ -101,6 +102,28 @@ export default function CreateInvoicePage() {
     loadClients();
   }, [user, supabase]);
 
+  // Load products for the per-line product picker
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .order('name');
+
+      if (error) {
+        console.error('Error loading products:', error);
+      } else {
+        setProducts(data || []);
+      }
+    };
+
+    loadProducts();
+  }, [user, supabase]);
+
   // Load company settings
   useEffect(() => {
     const loadCompanySettings = async () => {
@@ -140,6 +163,27 @@ export default function CreateInvoicePage() {
       newItems[index].vat_amount = subtotal * (newItems[index].vat_rate / 100);
     }
     
+    setItems(newItems);
+  };
+
+  // Prefill a line from a saved product (description / price / VAT / unit).
+  const applyProduct = (index: number, productId: string) => {
+    const p = products.find((x) => x.id === productId);
+    if (!p) return;
+    // Respect the seller's VAT status: a non-registered seller's lines stay 0%.
+    const sellerRegistered = companySettings?.vat_registered !== false;
+    const vat_rate = sellerRegistered ? (Number(p.vat_rate) || 0) : 0;
+    const unit_price = Number(p.unit_price) || 0;
+    const newItems = [...items];
+    const subtotal = newItems[index].quantity * unit_price;
+    newItems[index] = {
+      ...newItems[index],
+      description: (p.description && p.description.trim()) || p.name,
+      unit_price,
+      vat_rate,
+      amount: subtotal,
+      vat_amount: subtotal * (vat_rate / 100),
+    };
     setItems(newItems);
   };
 
@@ -496,6 +540,21 @@ export default function CreateInvoicePage() {
               <div key={index} className="grid grid-cols-12 gap-4 items-end">
                 <div className="col-span-4">
                   <Label>{t('Description')} *</Label>
+                  {products.length > 0 && (
+                    <Select value="" onValueChange={(v) => applyProduct(index, v)}>
+                      <SelectTrigger className="mb-2">
+                        <SelectValue placeholder={t('Velg produkt (valgfri)')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                            {p.product_number ? ` · ${p.product_number}` : ''} · {Number(p.unit_price).toFixed(2)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Input
                     placeholder={t('Item description')}
                     value={item.description}

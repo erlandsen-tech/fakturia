@@ -66,6 +66,7 @@ export default function Navbar() {
     ['/dashboard', t('Dashboard')],
     ['/invoices', t('Invoices')],
     ['/clients', t('Clients')],
+    ['/products', t('Products')],
     ['/settings', t('Settings')],
   ];
 
