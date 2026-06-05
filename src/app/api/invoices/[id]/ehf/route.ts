@@ -65,6 +65,8 @@ export async function GET(
         name: company.company_name,
         org_number: company.organization_number,
         vat_number: company.vat_number,
+        vat_registered: company.vat_registered ?? false,
+        tax_exemption_reason: company.tax_exemption_reason ?? null,
         address_line1: company.address_line1,
         address_line2: company.address_line2,
         postal_code: company.postal_code,

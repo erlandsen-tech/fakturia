@@ -27,7 +27,10 @@ export const updateInvoiceSchema = z.object({
   vat_rate: z.number().min(0).max(100).optional(),
 });
 
-// Web-app invoice creation: client_id (existing client) + line items
+// Web-app invoice creation: client_id (existing client) + line items.
+// NOTE: vat_rate defaults to 25 here, but the create route (api/invoices) forces
+// every line's rate to 0 server-side when the seller's company_settings.
+// vat_registered is false, so a non-registered seller can never store MVA.
 export const webCreateInvoiceSchema = z.object({
   client_id: z.string().uuid(),
   issue_date: z.string(),

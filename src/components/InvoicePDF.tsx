@@ -111,10 +111,18 @@ export interface InvoicePDFProps {
     number: string;
     issue_date: string;
     due_date: string;
-    sender: { name: string; address: string; org_no: string; email: string; phone?: string };
+    sender: {
+      name: string; address: string; org_no: string; email: string; phone?: string;
+      // VAT status drives the MVA suffix and the totals label. A seller who is
+      // not registered in the Merverdiavgiftsregisteret must NOT print "MVA".
+      vat_registered: boolean; vat_number?: string;
+    };
     recipient: { name: string; company?: string; address: string; org_no?: string };
     references?: { ours?: string; theirs?: string };
-    items: Array<{ description: string; quantity: number; unit: string; unit_price: number; vat_rate: number }>;
+    // amount = precomputed line net (NOK), already rounded in øre upstream.
+    items: Array<{ description: string; quantity: number; unit: string; unit_price: number; vat_rate: number; amount: number }>;
+    // Precomputed totals (NOK) from the stored, authoritative øre values.
+    totals: { subtotal: number; vat: number; total: number };
     payment: { account: string; kid?: string; iban?: string };
     note?: string;
   };
@@ -123,10 +131,21 @@ export interface InvoicePDFProps {
 const fmt = (n: number) =>
   n.toLocaleString("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// Trim trailing ",00"/zeros from a rate so "25.00" renders as "25".
+const fmtRate = (r: number) => String(Number(r));
+
 export function InvoicePDF({ invoice: i }: InvoicePDFProps) {
-  const subtotal = i.items.reduce((s, it) => s + it.quantity * it.unit_price, 0);
-  const vat = i.items.reduce((s, it) => s + it.quantity * it.unit_price * (it.vat_rate / 100), 0);
-  const total = subtotal + vat;
+  const { subtotal, vat, total } = i.totals;
+  const vatRegistered = i.sender.vat_registered;
+
+  // Derive the MVA totals label from the actual line rates rather than a
+  // hardcoded 25%. Non-registered sellers (or a 0 VAT total) show "ikke beregnet".
+  const positiveRates = Array.from(new Set(i.items.map((it) => it.vat_rate).filter((r) => r > 0)));
+  const vatLabel = !vatRegistered || vat === 0
+    ? "MVA (ikke beregnet)"
+    : positiveRates.length === 1
+      ? `MVA ${fmtRate(positiveRates[0])}%`
+      : "MVA";
 
   return (
     <Document title={`Faktura ${i.number}`}>
@@ -142,8 +161,9 @@ export function InvoicePDF({ invoice: i }: InvoicePDFProps) {
               </View>
               <Text style={styles.senderMeta}>
                 {i.sender.name}{"\n"}{i.sender.address}{"\n"}
-                Org.nr {i.sender.org_no} MVA{"\n"}{i.sender.email}
-                {i.sender.phone ? ` · ${i.sender.phone}` : ""}
+                Org.nr {i.sender.org_no}{vatRegistered ? (i.sender.vat_number ? ` · ${i.sender.vat_number}` : " MVA") : ""}{"\n"}
+                {i.sender.email}{i.sender.phone ? ` · ${i.sender.phone}` : ""}
+                {!vatRegistered ? "\nIkke MVA-registrert. Merverdiavgift er ikke beregnet." : ""}
               </Text>
             </View>
             <View style={{ marginTop: 30 }}>
@@ -189,8 +209,8 @@ export function InvoicePDF({ invoice: i }: InvoicePDFProps) {
               <Text style={styles.cellQty}>{it.quantity}</Text>
               <Text style={styles.cellUnit}>{it.unit}</Text>
               <Text style={styles.cellPrice}>{fmt(it.unit_price)}</Text>
-              <Text style={styles.cellVat}>{it.vat_rate}%</Text>
-              <Text style={styles.cellSum}>{fmt(it.quantity * it.unit_price)}</Text>
+              <Text style={styles.cellVat}>{fmtRate(it.vat_rate)}%</Text>
+              <Text style={styles.cellSum}>{fmt(it.amount)}</Text>
             </View>
           ))}
 
@@ -201,7 +221,7 @@ export function InvoicePDF({ invoice: i }: InvoicePDFProps) {
               <Text style={{ fontFamily: "JetBrains Mono" }}>{fmt(subtotal)}</Text>
             </View>
             <View style={styles.totalsRow}>
-              <Text style={styles.totalsLabel}>MVA 25%</Text>
+              <Text style={styles.totalsLabel}>{vatLabel}</Text>
               <Text style={{ fontFamily: "JetBrains Mono" }}>{fmt(vat)}</Text>
             </View>
             <View style={styles.totalsFinal}>

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Save } from 'lucide-react';
+import { Save, Download, Trash2 } from 'lucide-react';
 import { t } from '@/lib/i18n';
 
 interface CompanySettings {
@@ -39,6 +39,8 @@ export default function SettingsPage() {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [settings, setSettings] = useState<CompanySettings | null>(null);
   const [formData, setFormData] = useState({
     company_name: '',
@@ -167,6 +169,65 @@ export default function SettingsPage() {
       toast.error(t('Failed to save settings'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  // GDPR Art.15 — download a JSON export of all the user's data.
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await fetch('/api/account/export');
+      if (!res.ok) {
+        toast.error(t('Kunne ikke eksportere dataene dine.'));
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'fakturio-data-export.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error(t('Kunne ikke eksportere dataene dine.'));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // GDPR Art.17 — anonymize the account. Invoices are retained anonymously for
+  // 5 years per bokføringsloven; everything else is scrubbed.
+  const handleDeleteAccount = async () => {
+    const ok = window.confirm(
+      'Er du sikker på at du vil slette kontoen din?\n\n' +
+      'Personopplysningene dine anonymiseres. Fakturaer beholdes anonymt i 5 år ' +
+      'som loven krever (bokføringsloven §13). Dette kan ikke angres.',
+    );
+    if (!ok) return;
+
+    setDeleting(true);
+    try {
+      const res = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'SLETT' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error || t('Kunne ikke slette kontoen.'));
+        return;
+      }
+      await supabase.auth.signOut();
+      toast.success(data.message || t('Kontoen din er slettet.'));
+      router.push('/');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error(t('Kunne ikke slette kontoen.'));
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -375,6 +436,47 @@ export default function SettingsPage() {
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
               {saving ? t('Saving...') : t('Save Settings')}
+            </Button>
+          </div>
+        </div>
+
+        {/* Personvern / GDPR */}
+        <div className="bg-card p-6 rounded-lg border space-y-6 mt-8">
+          <div>
+            <h2 className="text-xl font-semibold">{t('Personvern')}</h2>
+            <p className="text-muted-foreground text-sm">
+              {t('Last ned dataene dine eller slett kontoen din.')}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border rounded-lg p-4">
+            <div className="max-w-xl">
+              <h3 className="font-medium">{t('Last ned mine data')}</h3>
+              <p className="text-sm text-muted-foreground">
+                {t('Få en JSON-fil med profilen, firmaopplysningene, kundene og fakturaene dine.')}
+              </p>
+            </div>
+            <Button variant="outline" onClick={handleExport} disabled={exporting} className="shrink-0">
+              <Download className="h-4 w-4 mr-2" />
+              {exporting ? t('Laster ned...') : t('Last ned mine data')}
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border border-red-200 bg-red-50 rounded-lg p-4">
+            <div className="max-w-xl">
+              <h3 className="font-medium text-red-900">{t('Slett konto')}</h3>
+              <p className="text-sm text-red-700">
+                {t('Personopplysningene dine anonymiseres. Fakturaer beholdes anonymt i 5 år iht. bokføringsloven §13. Dette kan ikke angres.')}
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              className="shrink-0"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {deleting ? t('Sletter...') : t('Slett konto')}
             </Button>
           </div>
         </div>

@@ -145,17 +145,63 @@ export async function PATCH(
       return NextResponse.json({ error: 'Cannot send a paid or cancelled invoice' }, { status: 400 });
     }
 
-    // Skip point deduction for unlimited subscription tiers
     const supabase = await createClient();
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_tier, subscription_status')
-      .eq('id', user.id)
+
+    // Idempotency fast-path: an already-sent invoice must not deduct a second
+    // point or re-email on a double-click or client retry.
+    if (invoice.status === 'sent') {
+      return NextResponse.json({
+        message: 'Invoice already sent',
+        data: { id: params.id, status: 'sent', alreadySent: true },
+      });
+    }
+
+    // Atomic claim: flip status to 'sent' only if it is not already 'sent'. This
+    // UPDATE is the concurrency gate — two simultaneous sends race on it and
+    // exactly one claims the row, so the point is deducted at most once. We
+    // revert to the original status below if the send cannot complete.
+    const { data: claimed } = await supabase
+      .from('invoices')
+      .update({ status: 'sent', updated_at: new Date().toISOString() })
+      .eq('id', params.id)
+      .eq('user_id', user.id)
+      .neq('status', 'sent')
+      .select('id')
       .maybeSingle();
 
-    const isUnlimited =
-      profile?.subscription_status === 'active' &&
-      (profile?.subscription_tier === 'growth' || profile?.subscription_tier === 'enterprise');
+    if (!claimed) {
+      // Lost the race — another concurrent request already claimed and sent it.
+      return NextResponse.json({
+        message: 'Invoice already sent',
+        data: { id: params.id, status: 'sent', alreadySent: true },
+      });
+    }
+
+    // Restore the pre-send status if a downstream step fails.
+    const revertClaim = async () => {
+      await supabase
+        .from('invoices')
+        .update({ status: invoice.status })
+        .eq('id', params.id)
+        .eq('user_id', user.id);
+    };
+
+    // Unlimited sends only exist for paid subscription tiers, and subscriptions
+    // are not a live product. Unless ENABLE_SUBSCRIPTIONS is explicitly on, every
+    // send deducts a point — even if a profile row was tampered to
+    // active/growth, it cannot mint free sends.
+    let isUnlimited = false;
+    if (process.env.ENABLE_SUBSCRIPTIONS === 'true') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier, subscription_status')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      isUnlimited =
+        profile?.subscription_status === 'active' &&
+        (profile?.subscription_tier === 'growth' || profile?.subscription_tier === 'enterprise');
+    }
 
     if (!isUnlimited) {
       // Atomic deduct via RPC: returns null/undefined if no points to deduct.
@@ -166,10 +212,12 @@ export async function PATCH(
 
       if (rpcError) {
         console.error('Error deducting points:', rpcError);
+        await revertClaim();
         return NextResponse.json({ error: 'Failed to deduct invoice points' }, { status: 500 });
       }
 
       if (remaining === null || remaining === undefined) {
+        await revertClaim();
         return NextResponse.json({
           error: 'Insufficient invoice points. Purchase more or upgrade your plan.',
         }, { status: 402 });
@@ -204,6 +252,8 @@ export async function PATCH(
             phone: company?.phone || undefined,
             website: company?.website || undefined,
             bankAccount: company?.bank_account || undefined,
+            vatRegistered: company?.vat_registered ?? false,
+            vatNumber: company?.vat_number || undefined,
           },
           client: {
             name: fullInvoice.client.name || '',
@@ -261,6 +311,8 @@ export async function PATCH(
               name: company?.company_name,
               org_number: company?.organization_number,
               vat_number: company?.vat_number,
+              vat_registered: company?.vat_registered ?? false,
+              tax_exemption_reason: company?.tax_exemption_reason ?? null,
               address_line1: company?.address_line1,
               address_line2: company?.address_line2,
               postal_code: company?.postal_code,
@@ -308,12 +360,14 @@ export async function PATCH(
         };
       }
 
-      await updateUserRecord('invoices', params.id, { status: 'sent' });
+      // Status was already flipped to 'sent' by the atomic claim above; nothing
+      // more to do on success.
     } catch (err) {
-      // A thrown Resend error (email.ts now throws on {error}) lands here, so
-      // control never reaches the status:'sent' update at the end of the try —
-      // the invoice stays unsent and the point is refunded below.
-      console.error('Send pipeline failed, refunding point:', err);
+      // A thrown Resend error (email.ts now throws on {error}) lands here. The
+      // invoice was optimistically claimed as 'sent'; revert it and refund the
+      // point so the user can retry cleanly.
+      console.error('Send pipeline failed, reverting and refunding point:', err);
+      await revertClaim();
       if (!isUnlimited) {
         // Refund via service role (RPC is revoked from authenticated).
         await getSupabaseAdmin().rpc('add_invoice_points', { p_user_id: user.id, p_points: 1 });

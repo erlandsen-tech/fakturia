@@ -255,6 +255,8 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                         org_no: companySettings.organization_number,
                         email: companySettings.email,
                         phone: companySettings.phone,
+                        vat_registered: companySettings.vat_registered ?? false,
+                        vat_number: companySettings.vat_number ?? undefined,
                       },
                       recipient: {
                         name: invoice.client.name,
@@ -266,8 +268,14 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
                         quantity: item.quantity,
                         unit: 'stk',
                         unit_price: item.unit_price,
-                        vat_rate: item.vat_rate || 25,
+                        vat_rate: item.vat_rate ?? 0,
+                        amount: item.amount,
                       })),
+                      totals: {
+                        subtotal: invoice.subtotal_amount ?? subtotalAmount,
+                        vat: invoice.vat_amount ?? totalVatAmount,
+                        total: invoice.total_amount ?? totalAmount,
+                      },
                       payment: {
                         account: companySettings.bank_account || '',
                       },

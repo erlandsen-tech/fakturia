@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchUserData, getAuthenticatedUser } from '@/lib/auth';
 import { createClient } from '@/utils/supabase/server';
 import { webCreateInvoiceSchema } from '@/lib/validations/invoice';
+import { computeInvoiceTotals, fromOre } from '@/lib/money';
 import type { InvoiceWithDetails } from '@/types/database';
 
 /**
@@ -61,9 +62,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Client not found' }, { status: 404 });
     }
 
-    const subtotalAmount = data.items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
-    const vatAmount = data.items.reduce((s, i) => s + i.quantity * i.unit_price * i.vat_rate / 100, 0);
-    const totalAmount = subtotalAmount + vatAmount;
+    // A seller who is not VAT-registered must never charge MVA. We force every
+    // line to 0% here so the authoritative stored amounts never carry VAT,
+    // regardless of what the client posted. computeInvoiceTotals() does the
+    // forcing and rounds once, in øre, so DB/PDF/EHF all agree.
+    const { data: companySettings } = await supabase
+      .from('company_settings')
+      .select('vat_registered')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const sellerVatRegistered = companySettings?.vat_registered ?? false;
+
+    const totals = computeInvoiceTotals(data.items, sellerVatRegistered);
+    const subtotalAmount = fromOre(totals.subtotalOre);
+    const vatAmount = fromOre(totals.vatOre);
+    const totalAmount = fromOre(totals.totalOre);
 
     const { data: invoiceNumber, error: numErr } = await supabase.rpc('next_invoice_number', { p_user_id: user.id });
     if (numErr || !invoiceNumber) {
@@ -82,7 +95,7 @@ export async function POST(request: NextRequest) {
         notes: data.notes ?? null,
         delivery_time: data.delivery_time ?? null,
         delivery_place: data.delivery_place ?? null,
-        vat_rate: data.vat_rate,
+        vat_rate: sellerVatRegistered ? data.vat_rate : 0,
         subtotal_amount: subtotalAmount,
         vat_amount: vatAmount,
         total_amount: totalAmount,
@@ -95,14 +108,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 });
     }
 
-    const itemsPayload = data.items.map((i) => ({
+    const itemsPayload = data.items.map((i, idx) => ({
       invoice_id: invoice.id,
       description: i.description,
       quantity: i.quantity,
       unit_price: i.unit_price,
-      amount: i.quantity * i.unit_price,
-      vat_rate: i.vat_rate,
-      vat_amount: i.quantity * i.unit_price * i.vat_rate / 100,
+      amount: fromOre(totals.lines[idx].amountOre),
+      vat_rate: totals.lines[idx].effectiveRate,
+      vat_amount: fromOre(totals.lines[idx].vatAmountOre),
     }));
 
     const { error: itemsErr } = await supabase.from('invoice_items').insert(itemsPayload);
