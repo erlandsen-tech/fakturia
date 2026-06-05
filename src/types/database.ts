@@ -27,6 +27,21 @@ export interface Profile {
   created_at: string;
 }
 
+export interface Product {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string | null;
+  unit_price: number;
+  vat_rate: number;
+  unit: string;
+  unit_code: string;
+  product_number?: string | null;
+  deleted_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Invoice {
   id: string;
   invoice_number: string;

@@ -63,6 +63,18 @@ export const createClientSchema = z.object({
   peppol_endpoint: z.string().max(60).optional(),
 });
 
+// Product catalogue entry (reusable invoice-line template).
+export const createProductSchema = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+  unit_price: z.number().nonnegative().max(10000000),
+  vat_rate: z.number().min(0).max(100).default(25),
+  unit: z.string().max(20).optional(),
+  unit_code: z.string().max(10).optional(),
+  product_number: z.string().max(60).optional(),
+});
+
+export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 export type UpdateInvoiceInput = z.infer<typeof updateInvoiceSchema>;
 export type CreateClientInput = z.infer<typeof createClientSchema>;
